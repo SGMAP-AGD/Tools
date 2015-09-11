@@ -7,11 +7,6 @@ Created on Sun May 17 10:59:14 2015
 import numpy as np
 import pandas as pd
 
-import psycopg2
-import csv
-import math
-import os
-import random
 import logging
 import time
 import datetime
@@ -20,50 +15,42 @@ from operator import itemgetter
 
 
 from collections import Counter
-from sklearn.metrics import accuracy_score
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.base import TransformerMixin
-from sklearn.cross_validation import *
-from sklearn.decomposition import *
-from sklearn.ensemble import *
-from sklearn.feature_selection import *
-from sklearn.grid_search import *
-from sklearn.linear_model import *
-from sklearn.metrics import *
-from sklearn.preprocessing import *
-from sklearn.pipeline import *
-from sklearn.svm import *
-from sklearn.tree import *
+
+# Logger #
 
 
-### Logger : 
-
-# Initialise logging
+# -- Initialise logging
 def init_logging(log_file_path):
 	logging.basicConfig(format='%(message)s', level=logging.INFO, filename=log_file_path)
 	logger = logging.getLogger(__name__)
-	
-# Formated current timestamp
+
+
+# -- Formated current timestamp
 def current_timestamp():
     ts = time.time()
     return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
- 
-# Log message with timestamp
+
+
+# -- Log message with timestamp
 def log_info(message):
     ts = time.time()
     logger.info(message + " " + current_timestamp())
 
-#### Preprocessing function
+############################
+#  Preprocessing function  #
+############################
 
-### Missing values
-#imputation
+# Missing values #
+# -- Imputation
 
 class DataFrameImputer(TransformerMixin):
     def __init__(self):
         """Impute missing values.
         Columns of dtype object ('O') are imputed with the most frequent value 
         in column.
-    
+
         Columns of other types are imputed with mean of column.
         """
     def fit(self, X, y=None):
@@ -71,23 +58,26 @@ class DataFrameImputer(TransformerMixin):
             if X[col].dtype == np.dtype('O') else X[col].median() for col in X],
             index=X.columns)
         return self
+
     def transform(self, X, y=None):
         return X.fillna(self.fill)
-        
-### Features function
-# get dummies, concat and delete feature
+
+
+# Features function #
+# -- get dummies, concat and delete feature
 
 def feature_to_dummy(df, feature, drop):
     ''' take a feature from a dataframe, convert it to dummy and name it like feature_value'''
     v_drop = drop
     tmp = pd.get_dummies(df[feature], prefix=feature, prefix_sep='_')
     df = pd.concat([df, tmp], axis=1, join_axes=[df.index])
-    if v_drop == True:
+    if v_drop is True:
         del df[feature]
     else:
         pass
     return df
-    
+
+
 def feature_selection(train_instances):
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
@@ -95,14 +85,13 @@ def feature_selection(train_instances):
     selector = VarianceThreshold()
     selector.fit(train_instances)
     logger.info('Number of features used... ' +
-              str(Counter(selector.get_support())[True]))
+                str(Counter(selector.get_support())[True]))
     logger.info('Number of features ignored... ' +
-              str(Counter(selector.get_support())[False]))
-    return selector 
-
-### Others
+                str(Counter(selector.get_support())[False]))
+    return selector
 
 
+# Others #
 def calculate_age_fromyear(year, today=None):
     ''' Calcule l'age en fonction du birthday et de la date d'aujourd'hui
     ou d'une date définie'''
@@ -118,9 +107,11 @@ def calculate_age_fromyear(year, today=None):
     return age
 
 
-#### Scikit function
-#grid_search
+###################
+# Scikit function #
+###################
 
+# -- grid_search
 def report_grid(grid_scores, n_top=3):
     '''return the 3 best models : score & std(score) on CV samples'''
     top_scores = sorted(grid_scores, key=itemgetter(1), reverse=True)[:n_top]
