@@ -4,6 +4,8 @@ Created on Wed Sep  9 14:10:23 2015
 
 @author: Florian
 """
+
+import getpass
 from sqlalchemy import create_engine
 import psycopg2
 
@@ -18,7 +20,7 @@ import Tools.config as config
 # -- Connect
 def connect(schema, table_name):
     ''' connexion postgre à partir d'un tuple (schema, table) et renvoie un tuple (table, colnames)'''
-    password = input("Entrez le mot de passe du server : ")
+    password = getpass.getpass("Entrez le mot de passe du server : ")
     dbname = input("Par défaut, la base chargée est celle de config, entrez" + \
                     " un autre nom si vous voulez, sinon, touche entrée")
     if dbname == '':
@@ -40,7 +42,7 @@ def connect(schema, table_name):
 
 # -- Create table
 def create_table(df, table_name, schema):
-    password = input("Entrez le mot de passe du server : ")
+    password = getpass.getpass("Entrez le mot de passe du server : ")
 
     conn_string = r'postgresql://' + config.user + ':' + password + '@' + \
         config.ipserver + '/' + config.user
