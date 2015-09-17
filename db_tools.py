@@ -21,14 +21,14 @@ import Tools.config as config
 def connect(schema, table_name):
     ''' connexion postgre à partir d'un tuple (schema, table) et renvoie un tuple (table, colnames)'''
     password = getpass.getpass("Entrez le mot de passe du server : ")
-    dbname = input("Par défaut, la base chargée est celle de config, entrez" + \
-                    " un autre nom si vous voulez, sinon, touche entrée")
+    dbname = input("Par défaut, la base chargée est celle de config, entrez" +
+                   " un autre nom si vous voulez, sinon, touche entrée")
     if dbname == '':
         dbname = config.dbname
 
     conn_string = "host='" + config.ipserver + "' dbname='" + dbname + \
-                   "' user='" + config.user + "' password='" + password + \
-                   "' client_encoding='utf-8' "
+                  "' user='" + config.user + "' password='" + password + \
+                  "' client_encoding='utf-8' "
     # print the connection string we will use to connect
     conn = psycopg2.connect(conn_string)
     del password, conn_string
