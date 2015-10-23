@@ -10,7 +10,7 @@ import psycopg2
 import paramiko
 import pandas as pd
 # cfg
-import Tools.config as config
+import config as config
 
 ##############
 # PostgreSQL #
