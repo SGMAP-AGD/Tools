@@ -10,7 +10,6 @@ import pandas as pd
 import logging
 import time
 import datetime
-from datetime import date
 from operator import itemgetter
 
 
@@ -100,7 +99,7 @@ def calculate_age_fromyear(year, today=None):
         age = today.year - int(year)
     else:
         try:
-            age = today.year - int(year)
+            int(year)
         except ValueError:  # year est parfois 'NC' (non communiqué)
             age = np.nan
 
