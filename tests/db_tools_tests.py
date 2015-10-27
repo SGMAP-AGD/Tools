@@ -1,6 +1,5 @@
 import unittest
 import db_tools
-from sklearn import datasets
 import pandas as pd
 
 
