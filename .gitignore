@@ -46,3 +46,4 @@ Temporary Items
 config.py
 /__pycache__
 *.spyderproject
+config.ini
