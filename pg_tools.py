@@ -16,12 +16,6 @@ import configparser
 config = configparser.ConfigParser()
 config.read("config.ini")
 
-
-##############
-# PostgreSQL #
-##############
-
-# -- Get connection string
 def get_conn_string(host, dbname, user, password="", client_encoding="utf-8"):
     conn_string = "host='" + host + "' " + \
                   "dbname='" + dbname + "' " + \
@@ -38,7 +32,7 @@ def get_engine(host, dbname, user, password="", port=5432,
     return create_engine(conn_string, client_encoding=client_encoding)
 
 
-def export_df(df, table_name, schema="public", if_exists='replace'):
+def export_df(df, table_name, schema="public", if_exists='fail'):
     engine = get_engine(host=config["PostgreSQL"]["host"],
                         dbname=config["PostgreSQL"]["dbname"],
                         user=config["PostgreSQL"]["user"])
