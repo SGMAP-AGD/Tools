@@ -1,10 +1,5 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Sep  9 14:10:23 2015
-
-@author Florian
-@author boupetch
-"""
 
 from sqlalchemy import create_engine
 import psycopg2
@@ -12,9 +7,12 @@ import paramiko
 import pandas as pd
 import configparser
 
-# Read config file
+__author__ = "Florian, Paul"
+
+""" Read config file """
 config = configparser.ConfigParser()
 config.read("config.ini")
+
 
 def get_conn_string(host, dbname, user, password="", client_encoding="utf-8"):
     conn_string = "host='" + host + "' " + \
@@ -56,6 +54,7 @@ def execute_sql(sql):
     else:
         cur.close()
         conn.commit()
+
 
 def import_table(table_name, schema="public"):
     sql = "SELECT * FROM " + schema + "." + table_name

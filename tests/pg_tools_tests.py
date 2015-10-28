@@ -1,6 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import unittest
 import pg_tools
 import pandas as pd
+
+__author__ = "Paul"
 
 
 class TestPGToolsMethods(unittest.TestCase):
