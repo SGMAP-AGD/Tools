@@ -3,7 +3,6 @@
 
 from sqlalchemy import create_engine
 import psycopg2
-import paramiko
 import pandas as pd
 import configparser
 
@@ -44,8 +43,8 @@ def execute_sql(sql):
     conn = psycopg2.connect(conn_string)
     cur = conn.cursor()
     cur.execute(sql)
-    # Some commands do not return rows. Ex: DROP, CREATE...
     if (isinstance(cur.description, type(None)) == False):
+        """ Some commands do not return rows. Ex: DROP, CREATE... """
         colnames = [col[0] for col in cur.description]
         rows = pd.DataFrame(cur.fetchall())
         cur.close()
@@ -60,28 +59,4 @@ def import_table(table_name, schema="public"):
     sql = "SELECT * FROM " + schema + "." + table_name
     return execute_sql(sql)
 
-#######
-# SSH #
-#######
 
-
-def connect_sftp_csv(rep, csv):
-    ''' crée une connexion sftp sur le server secure et permet notamment
-    l'accès à des fichiers contenus sur le server'''
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    try:
-        ssh.connect(config.ipsecure, username=config.user, password='')
-    except paramiko.SSHException:
-        print("Connection Error")
-
-    sftp = ssh.open_sftp()
-    sftp.chdir(rep)
-    table = pd.read_csv(sftp.open(csv))
-    ssh.close()
-    return table
-
-    # USE #
-    # sftp.chdir("/var/data/stsisi/")
-    # sftp.open('iris60.csv')
-    # ssh.close()
