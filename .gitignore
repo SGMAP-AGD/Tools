@@ -46,3 +46,14 @@ Temporary Items
 config.py
 /__pycache__
 *.spyderproject
+config.ini
+*.*~
+*.txt
+
+# Python packaging
+build
+dist
+agd_tools.egg-info
+*.pyc
+
+*.html

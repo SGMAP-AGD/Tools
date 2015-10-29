@@ -1,0 +1,9 @@
+[PostgreSQL]
+host = 127.0.0.1
+user = user
+dbname = db
+port = 5432
+
+[SSH]
+host = localhost
+username = username
