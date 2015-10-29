@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import configparser
+
 from sqlalchemy import create_engine
 import psycopg2
 import pandas as pd
-import configparser
 
 __author__ = "Florian, Paul"
 
@@ -25,7 +26,7 @@ def get_conn_string(host, dbname, user, password="", client_encoding="utf-8"):
 def get_engine(host, dbname, user, password="", port=5432,
                client_encoding="utf-8"):
     conn_string = "postgresql://" + user + ":" + password + "@" + \
-                host + ":" + str(port) + "/" + dbname
+                  host + ":" + str(port) + "/" + dbname
     return create_engine(conn_string, client_encoding=client_encoding)
 
 
@@ -43,7 +44,7 @@ def execute_sql(sql):
     conn = psycopg2.connect(conn_string)
     cur = conn.cursor()
     cur.execute(sql)
-    if (isinstance(cur.description, type(None)) == False):
+    if (isinstance(cur.description, type(None)) is False):
         """ Some commands do not return rows. Ex: DROP, CREATE... """
         colnames = [col[0] for col in cur.description]
         rows = pd.DataFrame(cur.fetchall())
@@ -58,5 +59,3 @@ def execute_sql(sql):
 def import_table(table_name, schema="public"):
     sql = "SELECT * FROM " + schema + "." + table_name
     return execute_sql(sql)
-
-

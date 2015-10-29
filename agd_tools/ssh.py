@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import os
+import configparser
 
 import paramiko
 import pandas as pd
-import configparser
 
 __author__ = "Florian, Paul"
 
@@ -14,7 +14,7 @@ config = configparser.ConfigParser()
 config.read("config.ini")
 
 
-def get_ssh_connect():
+def get_connect():
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(config["SSH"]["host"],
@@ -31,7 +31,7 @@ def export_df(df, remotepath, sep=";"):
               sep=sep)
 
     """ Put the csv over sftp """
-    ssh = get_ssh_connect()
+    ssh = get_connect()
     sftp = ssh.open_sftp()
     sftp.put(filepath, remotepath)
 
@@ -45,7 +45,7 @@ def export_df(df, remotepath, sep=";"):
 def import_csv(path, filename):
     """ crée une connexion sftp sur le server secure et permet notamment
     l'accès à des fichiers contenus sur le server"""
-    ssh = get_ssh_connect()
+    ssh = get_connect()
     sftp = ssh.open_sftp()
     sftp.chdir(path)
     df = pd.read_csv(sftp.open(filename))
@@ -54,6 +54,6 @@ def import_csv(path, filename):
 
 
 def remove_file(remotepath):
-    ssh = get_ssh_connect()
+    ssh = get_connect()
     sftp = ssh.open_sftp()
     sftp.remove(remotepath)
