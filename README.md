@@ -10,6 +10,13 @@ Install agd_tools using pip:
 pip install agd_tools
 ```
 
+Or clone the repo, go into it and run 
+
+```
+pip install -e .
+```
+
+
 ## Usage
 
 ### Config file
