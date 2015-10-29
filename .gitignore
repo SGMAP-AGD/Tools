@@ -55,3 +55,5 @@ build
 dist
 agd_tools.egg-info
 *.pyc
+
+*.html
