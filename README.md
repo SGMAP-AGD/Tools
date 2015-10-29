@@ -16,10 +16,7 @@ Or clone the repo, go into it and run
 pip install -e .
 ```
 
-
-## Usage
-
-### Config file
+### Config file
 
 agd_tools uses a config file to store your env variables. Be sure to have a valid `config.ini` file in your path. Here is a `config.ini` file example:
 
@@ -35,9 +32,11 @@ host = distanthost.com
 username = username
 ```
 
+## Examples
+
 ### Data management
 
-agd_tools offers CRUD functions for PostgreSQL and CSV over SSH data sources.
+agd_tools offers [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) functions for PostgreSQL and CSV over SSH data sources.
 
 #### PostgreSQL 
 
