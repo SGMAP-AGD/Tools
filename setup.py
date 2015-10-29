@@ -20,5 +20,6 @@ setup(
                       'psycopg2',
                       'pandas',
                       'paramiko',
-                      'sklearn']
+                      'sklearn',
+                      'configparser']
 )
