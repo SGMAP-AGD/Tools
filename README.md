@@ -70,3 +70,6 @@ iris_anonymized = iris[['Name']]
 k = anonymization.get_k(iris_anonymized)
 ```
 
+### Licence
+
+Cette librairie est libre sous licence [GNU Affero General Public License](http://www.gnu.org/licenses/agpl.html) version 3 ou ultérieure.
