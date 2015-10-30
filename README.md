@@ -6,13 +6,13 @@ Useful functions for datascience.
 
 Install agd_tools using pip:
 
-```
+```bash
 pip install agd_tools
 ```
 
 Or clone the repo, go into it and run 
 
-```
+```bash
 pip install -e .
 ```
 
@@ -20,7 +20,7 @@ pip install -e .
 
 agd_tools uses a config file to store your env variables. Be sure to have a valid `config.ini` file in your path. Here is a `config.ini` file example:
 
-```
+```ini
 [PostgreSQL]
 host = localhost
 user = username
@@ -42,7 +42,7 @@ agd_tools offers [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_d
 
 Import tables from PostgreSQL tables:
 
-```
+```python
 from agd_tools import pg
 
 iris = pg.import_table("iris", schema="flowers"):
@@ -52,7 +52,7 @@ iris = pg.import_table("iris", schema="flowers"):
 
 Import CSV from SSH hosts:
 
-```
+```python
 from agd_tools import ssh
 
 iris = ssh.import_csv("/var/data", "iris.csv")
@@ -63,7 +63,7 @@ iris = ssh.import_csv("/var/data", "iris.csv")
 
 Get the level of [k-anonymity](https://en.wikipedia.org/wiki/K-anonymity) of a dataframe using the `get_k`function:
 
-```
+```python
 from agd_tools import anonymization
 
 iris_anonymized = iris[['Name']]
