@@ -6,24 +6,15 @@ import pandas as pd
 __author__ = "Paul"
 
 
-def get_k(df, columns="all"):
+def get_k(df, columns = None):
+    ''' k here refers to the k-anonymity'''
+    # by default, use all columns for aggregation
+    if columns is None:
+        columns = df.columns
 
-    if(columns == "all"):
-        """ Get all columns for aggregation """
-        columns = df.columns.values
-
-    len_columns = len(columns)
-    if(len_columns == 1):
-        """ pandas grouby function does not take single element lists """
+    # pandas grouby function does not take single element lists
+    if len(columns) == 1:
         columns = columns[0]
 
-    dfgb = df.groupby(columns)
-
-    len_groups = []
-
-    for name, group in dfgb:
-        len_groups.append(len(group))
-
-    k = min(len_groups)
-
-    return k
+    size_group = df.groupby(columns).size()
+    return min(size_group)
