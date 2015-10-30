@@ -19,5 +19,11 @@ def get_k(df, columns="all"):
 
     dfgb = df.groupby(columns)
 
-    k = len(dfgb)
+    len_groups = []
+
+    for name, group in dfgb:
+        len_groups.append(len(group))
+
+    k = min(len_groups)
+
     return k

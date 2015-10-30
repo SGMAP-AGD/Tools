@@ -17,7 +17,7 @@ class TestAnonymisationMethods(unittest.TestCase):
                            "/pandas/master/pandas/tests/data/iris.csv")
         iris_anonymized = iris[['Name']]
         k = anonymization.get_k(iris_anonymized)
-        self.assertEqual(k, 3)
+        self.assertEqual(k, 50)
 
 if __name__ == '__main__':
     unittest.main()
