@@ -36,9 +36,11 @@ username = username
 
 ### Data management
 
-agd_tools offers [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) functions for PostgreSQL and CSV over SSH data sources.
+agd_tools offers [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) functions for [PostgreSQL](http://www.postgresql.org/) and CSV over SSH data sources.
 
 #### PostgreSQL 
+
+Import tables from PostgreSQL tables:
 
 ```
 from agd_tools import pg
@@ -46,10 +48,25 @@ from agd_tools import pg
 iris = pg.import_table("iris", schema="flowers"):
 ```
 
-#### SSH
+#### CSV over SSH
+
+Import CSV from SSH hosts:
 
 ```
 from agd_tools import ssh
 
 iris = ssh.import_csv("/var/data", "iris.csv")
+
 ```
+
+### Anonymization
+
+Get the level of [k-anonymity](https://en.wikipedia.org/wiki/K-anonymity) of a dataframe using the `get_k`function:
+
+```
+from agd_tools import anonymization
+
+iris_anonymized = iris[['Name']]
+k = anonymization.get_k(iris_anonymized)
+```
+
