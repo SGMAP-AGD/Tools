@@ -1,0 +1,10 @@
+﻿site_name: agd_tools
+pages:
+- [index.md, Accueil]
+- [installation.md, Installation]
+- [data_management.md, Data Management]
+- [anonymization.md, Anonymisation]
+- [string_matching.md, Rapprochement de chaînes de caractères]
+theme: readthedocs
+repo_url: https://github.com/SGMAP-AGD/Tools
+site_description: Tools for datasciences
