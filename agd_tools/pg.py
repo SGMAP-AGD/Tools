@@ -9,7 +9,7 @@ import pandas as pd
 
 __author__ = "Florian, Paul"
 
-""" Read config file """
+# Read config file
 config = configparser.ConfigParser()
 config.read("config.ini")
 
@@ -45,7 +45,7 @@ def execute_sql(sql):
     cur = conn.cursor()
     cur.execute(sql)
     if (isinstance(cur.description, type(None)) is False):
-        """ Some commands do not return rows. Ex: DROP, CREATE... """
+        # Some commands do not return rows. Ex: DROP, CREATE...
         colnames = [col[0] for col in cur.description]
         rows = pd.DataFrame(cur.fetchall())
         cur.close()

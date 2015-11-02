@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import os
@@ -9,12 +9,14 @@ import pandas as pd
 
 __author__ = "Florian, Paul"
 
-""" Read config file """
+# Read config file
 config = configparser.ConfigParser()
 config.read("config.ini")
 
 
-def get_connect():
+def _get_connect():
+    """ crée une connexion sftp sur le server secure et permet notamment
+    l'accès à des fichiers contenus sur le server """
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(config["SSH"]["host"],
@@ -23,29 +25,24 @@ def get_connect():
 
 
 def export_df(df, remotepath, sep=";"):
-
-    """ Save df to local csv """
+    ''' exporter un pandas DataFrame en un csv sur le serveur 
+	- sep désigne le séparateur du csv
+    '''
+    # Save df to local csv
     current_dir = os.getcwd()
-    filepath = current_dir + "/temp.csv"
-    df.to_csv(path_or_buf=filepath,
-              sep=sep)
+    filepath = os.path.join(current_dir, 'temp.csv')
+    df.to_csv(path_or_buf=filepath, sep=sep)
 
-    """ Put the csv over sftp """
-    ssh = get_connect()
+    ssh = _get_connect()
     sftp = ssh.open_sftp()
-    sftp.put(filepath, remotepath)
-
-    """ Delete local csv """
-    os.remove(filepath)
-
-    """ Close ssh """
+    sftp.put(filepath, remotepath) # Put the csv over sftp
+    os.remove(filepath) # Delete local csv
     ssh.close()
 
 
 def import_csv(path, filename):
-    """ crée une connexion sftp sur le server secure et permet notamment
-    l'accès à des fichiers contenus sur le server"""
-    ssh = get_connect()
+    """ import un csv depuis le serveur et renvoit un pandas DataFrame """
+    ssh = _get_connect()
     sftp = ssh.open_sftp()
     sftp.chdir(path)
     df = pd.read_csv(sftp.open(filename))
@@ -54,6 +51,8 @@ def import_csv(path, filename):
 
 
 def remove_file(remotepath):
-    ssh = get_connect()
+    ''' supprime un fichier du serveur '''
+    ssh = _get_connect()
     sftp = ssh.open_sftp()
     sftp.remove(remotepath)
+    ssh.close()
