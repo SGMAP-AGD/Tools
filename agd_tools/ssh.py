@@ -58,12 +58,12 @@ def export_df(df, remotepath, sep=";"):
     ssh.close()
 
 
-def import_csv(path, filename):
+def import_csv(path, filename, sep=',', encoding='utf8'):
     """ import un csv depuis le serveur et renvoit un pandas DataFrame """
     ssh = _get_connect()
     sftp = ssh.open_sftp()
     sftp.chdir(path)
-    df = pd.read_csv(sftp.open(filename))
+    df = pd.read_csv(sftp.open(filename), sep=sep, encoding=encoding)
     ssh.close()
     return df
 
