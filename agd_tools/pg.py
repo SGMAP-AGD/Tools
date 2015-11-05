@@ -38,6 +38,14 @@ def export_df(df, table_name, schema="public", if_exists='fail'):
 
 
 def execute_sql(sql):
+    """
+        Execute sql code using PostgreSQL parameters in the config file.
+
+        :param sql: SQL script to execute
+        :type sql: string
+        :return: A dataframe
+        :rtype: pandas.DataFrame
+    """
     conn_string = get_conn_string(host=config["PostgreSQL"]["host"],
                                   dbname=config["PostgreSQL"]["dbname"],
                                   user=config["PostgreSQL"]["user"])
@@ -47,10 +55,10 @@ def execute_sql(sql):
     if (isinstance(cur.description, type(None)) is False):
         # Some commands do not return rows. Ex: DROP, CREATE...
         colnames = [col[0] for col in cur.description]
-        rows = pd.DataFrame(cur.fetchall())
+        df = pd.DataFrame(cur.fetchall(), columns=colnames)
         cur.close()
         conn.commit()
-        return (rows, colnames)
+        return(df)
     else:
         cur.close()
         conn.commit()
