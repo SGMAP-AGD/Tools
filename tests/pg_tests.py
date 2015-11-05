@@ -45,7 +45,7 @@ class TestPGToolsMethods(unittest.TestCase):
 
     def test_drop_table(self):
         table_name = "iris_unittest"
-        drop = pg.execute_sql("DROP TABLE " + table_name + "")
+        drop = pg.execute_sql("DROP TABLE " + table_name + "", commit=True)
         results = pg.execute_sql("SELECT COUNT(relname) "
                                  "FROM pg_class WHERE relname='"
                                  "" + table_name + "'")

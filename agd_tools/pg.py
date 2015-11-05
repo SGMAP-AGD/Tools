@@ -37,13 +37,13 @@ def export_df(df, table_name, schema="public", if_exists='fail'):
     return df.to_sql(table_name, engine, schema=schema, if_exists=if_exists)
 
 
-def execute_sql(sql):
+def execute_sql(sql, commit=False):
     """
         Execute sql code using PostgreSQL parameters in the config file.
 
         :param sql: SQL script to execute
         :type sql: string
-        :return: A dataframe
+        :return: A dataframe or nothing
         :rtype: pandas.DataFrame
     """
     conn_string = get_conn_string(host=config["PostgreSQL"]["host"],
@@ -57,11 +57,13 @@ def execute_sql(sql):
         colnames = [col[0] for col in cur.description]
         df = pd.DataFrame(cur.fetchall(), columns=colnames)
         cur.close()
-        conn.commit()
+        if(commit):
+            conn.commit()
         return(df)
     else:
         cur.close()
-        conn.commit()
+        if(commit):
+            conn.commit()
 
 
 def import_table(table_name, schema="public"):
