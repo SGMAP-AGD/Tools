@@ -21,5 +21,5 @@ setup(
                       'pandas',
                       'paramiko',
                       'sklearn',
-                      'configparser']
+                      ]
 )
