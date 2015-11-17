@@ -1,3 +1,7 @@
+## 0.0.4
+
+* configuration is now in the package folder
+
 ## 0.0.3
 
 * bug fix in setup.py
