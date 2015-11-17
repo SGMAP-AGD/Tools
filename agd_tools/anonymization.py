@@ -21,18 +21,28 @@ def get_k(df, groupby):
     return min(size_group)
 
 
-def get_distinct_l(df, column, groupby):
+def _l_diversity(x):
+    nb_distinct_without_na = x.nunique(dropna=True)
+    # each na can be considered as a distinct value
+    nb_of_na = sum(x.isnull())
+    return nb_distinct_without_na + nb_of_na
+
+
+def get_diversities(df, groupby, column):
     """
-        Return the l-diversity level of a column, grouped by another column.
+        Return the diversity level of a column in a dataframe.
 
         A simple implementation of distinct l-diversity.
+
+        This implementation takes None values as distinct modalities.
+
+        You should replace all invalid, unknown and false rows by None
+        before using this function
+
         Aggarwal, Charu C.; Yu, Philip S. (2008):
         "A General Survey of Privacy"
         http://charuaggarwal.net/generalsurvey.pdf
         Springer. ISBN 978-0-387-70991-8.
-        This implementation takes None values as distinct modalities.
-        You should replace all invalid, unknown and false rows by None
-        before using this function
 
         :param df: The dataframe to get l from
         :param column: The sensible data column
@@ -50,9 +60,27 @@ def get_distinct_l(df, column, groupby):
                                                        groupby=['Name'],
                                                        column='PetalLength')
     """
-    group_diversities = []
-    for name, group in df.groupby(groupby):
-        value_counts = group[column].value_counts()
-        diversity = len(value_counts) + len(group[column]) - sum(value_counts)
-        group_diversities.append(diversity)
-    return min(group_diversities)
+    grp = df.groupby(groupby)
+    res = grp[column].agg({'l_diversity' : _l_diversity })
+    return res
+
+
+def get_l(df, groupby, column):
+    return min(get_diversities(df, groupby, column)['l_diversity'])
+
+
+def diversity_distribution(df, groupby, column):
+    diversity = get_diversities(df, groupby, column)['l_diversity']
+    return diversity.value_counts().sort_index()
+
+
+def less_diverse_groups(df, groupby, column):
+    grp = df.groupby(groupby)
+    res = grp[column].agg({'l_diversity' : _l_diversity })
+    diversity = res['l_diversity']
+    select = diversity[diversity == min(diversity)]
+    results = []
+    for group_index in select.index:
+        results += [grp.get_group(group_index)]
+    return results
+
