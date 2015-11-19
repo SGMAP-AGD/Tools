@@ -7,6 +7,9 @@ La première crée des objets utiles qui permette d'ajouter facilement des élé
 temporel à une analyse.
 La seconde crée des évenements standard.
 
+TODO: add a name attribute in period object and use it in build_period_dummies
+
+
 @author: Flo, Alexis
 """
 
@@ -21,7 +24,29 @@ class Period(object):
 
 def check_is_date(date):
     # TODO: assert date is a date
-    return True
+    return not isinstance(date, list) and not isinstance(date, tuple)
+
+
+def guess_Period_type(obj, zone):
+    ''' chaque periode est associée à un format pour l'instant
+        cette fonction retourne l'objet correspondant:
+        - PunctualPeriod
+        - AnnualPeriod
+        - IntervalPeriod
+    '''
+    if check_is_date(obj):
+        return PunctualPeriod(obj, zone)
+    else:
+        assert isinstance(obj, list) or isinstance(obj, tuple)
+        if len(obj) == 1:
+            return  PunctualPeriod(obj[0], zone)
+        if len(obj) == 2:
+            return  IntervalPeriod(obj[0], obj[1], zone)
+        if len(obj) > 2:
+            raise Exception('Impossible de déterminer un objet ' + 
+                'de type Period correspondant à ', obj
+                )    
+
 
 class PunctualPeriod(Period):
     def __init__(self, date, zone=None):        
@@ -55,55 +80,6 @@ class IntervalPeriod(Period):
         else:
             return date_condition
 
-
-class MultiPunctualPeriod(Period):
-    ''' Une periode ne doit concerner qu'une seule zone '''
-    
-    def __init__(self, list_of_points, zone=None):
-        # TODO: assert start is a date
-        # TODO: assert end is a date
-        assert isinstance(list_of_points, list)
-        self.points = []
-        for point in list_of_points:
-            if not isinstance(point, Period):
-                period = PunctualPeriod(point, zone)
-            else:
-                period = point
-            self.points += [period]
-        zone = self.points[0].zone
-        assert all([x.zone == zone for x in self.points])
-
-    def build(self, date, zone=None):
-        condition = pd.Series(False, len(date))
-        for point in self.points:
-            condition = condition | point.build(date, zone)
-        return condition
-
-
-class MultiIntervalPeriod(Period):
-    ''' Une periode ne doit concerner qu'une seule zone '''
-    
-    def __init__(self, list_of_interval, zone=None):
-        # TODO: assert start is a date
-        # TODO: assert end is a date
-        assert isinstance(list_of_interval, list)
-        self.intervals = []
-        for interval in list_of_interval:
-            if not isinstance(interval, Period):
-                assert len(interval) == 2
-                period = IntervalPeriod(interval[0], interval[1], zone)
-            else:
-                period = interval
-            self.intervals += [period]
-        zone = self.intervals[0].zone
-        assert all([x.zone == zone for x in self.intervals])
-
-    def build(self, date, zone=None):
-        condition = pd.Series(False, len(date))
-        for interval in self.intervals:
-            condition = condition | interval.build(date, zone)
-        return condition
-        
 class AnnualDay(Period):
     def __init__(self, day, month, zone=None):
         self.day = day
@@ -113,10 +89,37 @@ class AnnualDay(Period):
     def build(self, date, zone=None):
         date_condition = (date.day == self.day) & (date.month == self.month)
         if self.zone is not None:
-            assert zone is not None
-            return date_condition*(zone == self.zone)
-        else:
-            return date_condition
+            if zone is not None:
+                return date_condition*(zone == self.zone)
+            else:
+                print("il y a une condition de localisation. Sans varaible " + 
+                'de position, on la suppose vérifiée')
+        return date_condition
+
+
+class MultiPeriod(Period):
+    ''' a Period with multiple condition 
+        Be aware that if there is a zone, it should be the same for
+        all periods
+    '''
+    def __init__(self, list_of_periods, zone=None):
+        assert isinstance(list_of_periods, list)
+        self.periods = []
+        for period in list_of_periods:
+            if isinstance(period, Period):
+                self.periods += period
+            else:
+                self.periods.append(guess_Period_type(period, zone))
+
+        zone = self.periods[0].zone
+        assert all([x.zone == zone for x in self.periods])    
+
+    def build(self, date, zone=None):
+        condition = pd.Series(False, len(date))
+        for point in self.points:
+            condition = condition | point.build(date, zone)
+        return condition
+        
         
 def build_period_dummies(df, list_of_periods,
                          date_columns=None, zone_column=None):
@@ -186,9 +189,9 @@ def build_period_dummies(df, list_of_periods,
 Premier_Janvier = AnnualDay(1,1)
 Premier_Mai = AnnualDay(1,5)
 Huit_Mai = AnnualDay(8,5)
-Lundi_de_Paques = MultiPunctualPeriod(['2012-04-09', '2013-04-01', '2014-04-21', '2015-04-06'])
-Jeudi_Ascension = MultiPunctualPeriod(['2012-05-17', '2013-05-19', '2014-05-29', '2015-05-14'])
-Lundi_Pentecote = MultiPunctualPeriod(['2012-05-28', '2013-05-20', '2014-05-29', '2015-05-25'])
+Lundi_de_Paques = MultiPeriod(['2012-04-09', '2013-04-01', '2014-04-21', '2015-04-06'])
+Jeudi_Ascension = MultiPeriod(['2012-05-17', '2013-05-19', '2014-05-29', '2015-05-14'])
+Lundi_Pentecote = MultiPeriod(['2012-05-28', '2013-05-20', '2014-05-29', '2015-05-25'])
 Quatorze_Juillet = AnnualDay(14,7)
 Assomption = AnnualDay(15,8)
 Tousaint = AnnualDay(1,11)
@@ -196,3 +199,9 @@ Onze_Novembre = AnnualDay(11,11)
 Noel = AnnualDay(25,12)
 Fete_Musique = AnnualDay(21,6)
 Nuit_Blanche = None # TODO:
+
+vac_toussain = MultiPeriod([('2012-10-27','2012-11-13'), ('2013-10-19','2013-11-04'),('2014-10-18','2014-11-03')])
+vac_noel = MultiPeriod([('2012-12-22','2013-01-08'),('2013-12-21','2014-01-06'),('2014-12-20','2015-01-05')])
+vac_hiver = MultiPeriod([('2013-03-02','2013-03-18'),('2014-02-15','2014-03-03'),('2015-02-21','2015-03-09')])
+vac_printemps = MultiPeriod([('2013-04-27','2013-05-13'),('2014-04-12','2014-04-28'),('2015-04-25','2015-05-11')])
+vac_ete = MultiPeriod([('2013-07-06','2014-09-03'),('2014-07-05','2015-09-02'),('2015-07-03','2015-09-01')])
