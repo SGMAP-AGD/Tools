@@ -1,8 +1,8 @@
 config.py
 /__pycache__
 *.spyderproject
-config.ini
 *~
+config.ini
 *.pyc
 *.html
 
