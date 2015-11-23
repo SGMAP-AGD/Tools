@@ -22,41 +22,41 @@ def get_k(df, groupby):
 
 
 def _l_diversity(x):
+    """
+        A simple implementation of l-diversity counting na as distinct values
+        
+        Aggarwal, Charu C.; Yu, Philip S. (2008):
+        "A General Survey of Privacy"
+        http://charuaggarwal.net/generalsurvey.pdf
+        Springer. ISBN 978-0-387-70991-8
+    """
     nb_distinct_without_na = x.nunique(dropna=True)
-    # each na can be considered as a distinct value
     nb_of_na = sum(x.isnull())
     return nb_distinct_without_na + nb_of_na
 
 
 def get_diversities(df, groupby, column):
     """
-        Return the diversity level of a column in a dataframe.
+        Return the diversities levels of a column in a dataframe.
 
-        A simple implementation of distinct l-diversity.
+        This implementation takes Nan values as distinct modalities.
 
-        This implementation takes None values as distinct modalities.
+        You should replace all invalid, unknown and false rows by 
+        the numpy nan type before using this function.
 
-        You should replace all invalid, unknown and false rows by None
-        before using this function
-
-        Aggarwal, Charu C.; Yu, Philip S. (2008):
-        "A General Survey of Privacy"
-        http://charuaggarwal.net/generalsurvey.pdf
-        Springer. ISBN 978-0-387-70991-8.
-
-        :param df: The dataframe to get l from
+        :param df: A pandas dataframe
         :param column: The sensible data column
         :param groupby: The columns to group by
-        :type df: pandas.DataFrame
-        :type column: string
-        :type groupby: Array
-        :return: l-diversity
-        :rtype: int
-
+        :type df: pandas.core.frame.DataFrame
+        :type column: str
+        :type groupby: list
+        :return: diversities for each group
+        :rtype: pandas.core.frame.DataFrame
+        
         :Example:
 
         >>> iris = pd.read_csv("tests/iris.csv")
-        >>> l_diversity = anonymization.get_distinct_l(iris,
+        >>> diversities = anonymization.get_diversities(iris,
                                                        groupby=['Name'],
                                                        column='PetalLength')
     """
@@ -66,15 +66,37 @@ def get_diversities(df, groupby, column):
 
 
 def get_l(df, groupby, column):
+    """
+        Return the l-diversity value as an integer.
+        
+        Calls the get_diversities and extract the minimum l-diversity level.
+        
+        :param df: The dataframe to get l from
+        :param column: The sensible data column
+        :param groupby: The columns to group by
+        :type df: pandas.core.frame.DataFrame
+        :type column: str
+        :type groupby: list
+        :return: l-diversity
+        :rtype: int
+        
+        
+    """
     return min(get_diversities(df, groupby, column)['l_diversity'])
 
 
 def diversity_distribution(df, groupby, column):
+    """
+        Return the l-diversity distribution of a dataframe.
+    """
     diversity = get_diversities(df, groupby, column)['l_diversity']
     return diversity.value_counts().sort_index()
 
 
 def less_diverse_groups(df, groupby, column):
+    """
+        Return the less diverse groups.
+    """    
     grp = df.groupby(groupby)
     res = grp[column].agg({'l_diversity' : _l_diversity })
     diversity = res['l_diversity']
