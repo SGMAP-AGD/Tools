@@ -13,7 +13,8 @@ __author__ = "Florian, Paul, Alexis"
 
 # Read config file
 config = configparser.ConfigParser()
-config.read("config.ini")
+path_config = os.path.dirname(os.path.realpath(__file__))
+config.read(os.path.join(path_config, "config.ini"))
 
 def _get_password():
     phrase = "Entrez le mot de passe de votre clé ssh : "

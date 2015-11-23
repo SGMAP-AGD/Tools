@@ -65,15 +65,16 @@ class DataFrameImputer(TransformerMixin):
 # Features function #
 # -- get dummies, concat and delete feature
 
-def feature_to_dummy(df, feature, drop):
-    ''' take a feature from a dataframe, convert it to dummy and name it like feature_value'''
-    v_drop = drop
-    tmp = pd.get_dummies(df[feature], prefix=feature, prefix_sep='_')
+def feature_to_dummy(df, column, drop=False):
+    ''' take a serie from a dataframe,
+        convert it to dummy and name it like feature_value
+        - df is a dataframe
+        - column is the name of the column to be transformed
+        - if drop is true, the serie is removed from dataframe'''
+    tmp = pd.get_dummies(df[column], prefix=column, prefix_sep='_')
     df = pd.concat([df, tmp], axis=1, join_axes=[df.index])
-    if v_drop is True:
-        del df[feature]
-    else:
-        pass
+    if drop:
+        del df[column]
     return df
 
 
