@@ -11,7 +11,7 @@ __author__ = "Florian, Paul"
 
 # Read config file
 config = configparser.ConfigParser()
-config.read("config.ini")
+config.read(os.path.dirname(os.path.realpath(__file__)) + "/config.ini")
 
 
 def get_conn_string(host, dbname, user, password="", client_encoding="utf-8"):
