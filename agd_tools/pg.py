@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import configparser
-
+import os
 from sqlalchemy import create_engine
 import psycopg2
 import pandas as pd
