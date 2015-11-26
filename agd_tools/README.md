@@ -1,5 +1,7 @@
 ####USE
 
+Here is a step-by-step example to illustrate compare_classifiers module.
+
 ```python
 import Tools.agd_tools.compare_classifiers.tree as tree
 import Tools.agd_tools.compare_classifiers.transformers as transformers
