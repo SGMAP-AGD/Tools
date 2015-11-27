@@ -1,5 +1,8 @@
 language: python
 python:
  - "3.4"
-install: pip install .
-script: python -m unittest discover -v -s tests
+install:
+ - pip install -U pip wheel
+ - pip install .
+script:
+ - python -m unittest discover -v -s tests
