@@ -21,7 +21,7 @@ class Period(object):
     def __init(self, name, zone):
         self.name = name
         self.zone = zone
-                
+
     def build(self):
         raise NotImplementedError
 
@@ -47,13 +47,13 @@ def guess_Period_type(obj, name, zone):
         if len(obj) == 2:
             return  IntervalPeriod(name, obj[0], obj[1], zone)
         if len(obj) > 2:
-            raise Exception('Impossible de déterminer un objet ' + 
+            raise Exception('Impossible de déterminer un objet ' +
                 'de type Period correspondant à ', obj
-                )    
+                )
 
 
 class PunctualPeriod(Period):
-    def __init__(self, name, date, zone=None):        
+    def __init__(self, name, date, zone=None):
         assert check_is_date(date)
         self.name = name
         self.date = date
@@ -66,7 +66,7 @@ class PunctualPeriod(Period):
             return date_condition*(zone == self.zone)
         else:
             return date_condition
-    
+
 
 class IntervalPeriod(Period):
     '''following python stadard, start is included in the period, end is not'''
@@ -92,20 +92,20 @@ class AnnualDay(Period):
         self.day = day
         self.month = month
         self.zone = zone
-        
+
     def build(self, date, zone=None):
         date_condition = (date.day == self.day) & (date.month == self.month)
         if self.zone is not None:
             if zone is not None:
                 return date_condition*(zone == self.zone)
             else:
-                print("il y a une condition de localisation. Sans varaible " + 
+                print("il y a une condition de localisation. Sans varaible " +
                 'de position, on la suppose vérifiée')
         return date_condition
 
 
 class MultiPeriod(Period):
-    ''' a Period with multiple condition 
+    ''' a Period with multiple condition
         Be aware that if there is a zone, it should be the same for
         all periods
     '''
@@ -120,26 +120,26 @@ class MultiPeriod(Period):
                 self.periods.append(guess_Period_type(period, name, zone))
 
         zone = self.periods[0].zone
-        assert all([x.zone == zone for x in self.periods])    
+        assert all([x.zone == zone for x in self.periods])
 
     def build(self, date, zone=None):
-        condition = pd.Series(False, range(len(date)))
+        condition = pd.Series(False, range(len(date)), name=self.name)
         for period in self.periods:
             condition = condition | period.build(date, zone)
         return condition
-        
-        
+
+
 def build_period_dummies(df, list_of_periods,
-                         date_columns=None, zone_column=None):
+                         date_column=None, zone_column=None):
     ''' Calculate period based dummies-features
         - df is a pandas data_frame
         - list_of_date is a list of objects used to defined period and dummy
-        - date_columns is the column of reference. It's from that column than
+        - date_column is the column of reference. It's from that column than
             the dummies will be build.
             If None, the Index is used.
             In both case, it's supposed to be DatetimeIndex compatible
         - zone_columns is the columns containing the geographical information
-           More work could be done on that point since the zone could have 
+           More work could be done on that point since the zone could have
            various aspect and could be different for each period
     '''
     if not isinstance(list_of_periods, list):
@@ -149,21 +149,21 @@ def build_period_dummies(df, list_of_periods,
     for period in list_of_periods:
         assert isinstance(period, Period)
 
-    if date_columns is None:
+    if date_column is None:
         date = df.index
     else:
-        date = df[date_columns]
+        date = df[date_column]
 
     date = pd.DatetimeIndex(date)
     if zone_column is not None:
         zone = df[zone_column]
     else:
         zone = None
-    
+
     count = 0
     for period in list_of_periods:
         df['period' + str(count)] = period.build(date, zone)
-    
+
 #    if(date_col is not None):
 #        if any(date_col in col for col in ts.columns):
 #            ts.set_index(date_col, inplace=True)
@@ -194,8 +194,18 @@ Fete_Musique = AnnualDay('fete_musique', 21,6)
 Nuit_Blanche = None # TODO:
 
 # --  Données calendaires : 2012, 2013 et 2014 / vacances zone C
-vac_toussaint = MultiPeriod('vac_toussaint', [('2012-10-27','2012-11-13'), ('2013-10-19','2013-11-04'),('2014-10-18','2014-11-03')])
-vac_noel = MultiPeriod('vac_noel', [('2012-12-22','2013-01-08'),('2013-12-21','2014-01-06'),('2014-12-20','2015-01-05')])
-vac_hiver = MultiPeriod('vac_hiver', [('2013-03-02','2013-03-18'),('2014-02-15','2014-03-03'),('2015-02-21','2015-03-09')])
-vac_printemps = MultiPeriod('vac_printemps', [('2013-04-27','2013-05-13'),('2014-04-12','2014-04-28'),('2015-04-25','2015-05-11')])
-vac_ete = MultiPeriod('vac_ete', [('2013-07-06','2014-09-03'),('2014-07-05','2015-09-02'),('2015-07-03','2015-09-01')])
+vac_toussaint = MultiPeriod('vac_toussaint',
+                            [('2012-10-27','2012-11-13'), ('2013-10-19','2013-11-04'),('2014-10-18','2014-11-03')],
+                             zone = "zonz C")
+vac_noel = MultiPeriod('vac_noel',
+                       [('2012-12-22','2013-01-08'),('2013-12-21','2014-01-06'),('2014-12-20','2015-01-05')],
+                       zone = "zonz C")
+vac_hiver = MultiPeriod('vac_hiver',
+                        [('2013-03-02','2013-03-18'),('2014-02-15','2014-03-03'),('2015-02-21','2015-03-09')],
+                        zone = "zonz C")
+vac_printemps = MultiPeriod('vac_printemps',
+                            [('2013-04-27','2013-05-13'),('2014-04-12','2014-04-28'),('2015-04-25','2015-05-11')],
+                            zone = "zonz C")
+vac_ete = MultiPeriod('vac_ete',
+                      [('2013-07-06','2014-09-03'),('2014-07-05','2015-09-02'),('2015-07-03','2015-09-01')],
+                       zone = "zonz C")
