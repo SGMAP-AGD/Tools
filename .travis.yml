@@ -10,7 +10,7 @@ before_install:
   - export PATH=/home/travis/miniconda3/bin:$PATH
 
 install:
- - conda install numpy scipy pandas
+ - conda install --yes numpy scipy pandas
  - pip install .
 
 script:
