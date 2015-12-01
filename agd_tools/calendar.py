@@ -61,6 +61,7 @@ class PunctualPeriod(Period):
 
     def build(self, date, zone=None):
         date_condition = (date == self.date)
+        date_condition = pd.Series(date_condition, name=self.name)
         if self.zone is not None:
             if zone is not None:
                 return date_condition*(zone == self.zone)
@@ -80,6 +81,7 @@ class IntervalPeriod(Period):
 
     def build(self, date, zone=None):
         date_condition = (date >= self.start) & (date < self.end)
+        date_condition = pd.Series(date_condition, name=self.name)
         if self.zone is not None:
             if zone is not None:
                 return date_condition*(zone == self.zone)
@@ -94,6 +96,7 @@ class AnnualDay(Period):
 
     def build(self, date, zone=None):
         date_condition = (date.day == self.day) & (date.month == self.month)
+        date_condition = pd.Series(date_condition, name=self.name)
         if self.zone is not None:
             if zone is not None:
                 return date_condition*(zone == self.zone)
@@ -159,20 +162,11 @@ def build_period_dummies(df, list_of_periods,
     else:
         zone = None
 
-    count = 0
     for period in list_of_periods:
-        df['period' + str(count)] = period.build(date, zone)
+        df[period.name] = period.build(date, zone).values
 
-#    if(date_col is not None):
-#        if any(date_col in col for col in ts.columns):
-#            ts.set_index(date_col, inplace=True)
-#        else:
-#            raise Exception('The column \'date_col\' you entered is not in the DataFrame')
-#
-#    if(type(date) != pd.DatetimeIndex):
-#        raise Exception('date_col column must be in the pd.DateTimeIndex format')
     return df
-#
+
 #    # -- Jours particuliers
 #    ts['dayofmonth'] = date.day
 #    ts['dayofweek'] = date.dayofweek
