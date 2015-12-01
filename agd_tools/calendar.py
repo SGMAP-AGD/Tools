@@ -62,8 +62,8 @@ class PunctualPeriod(Period):
     def build(self, date, zone=None):
         date_condition = (date == self.date)
         if self.zone is not None:
-            assert zone is not None
-            return date_condition*(zone == self.zone)
+            if zone is not None:
+                return date_condition*(zone == self.zone)
         else:
             return date_condition
 
@@ -81,10 +81,9 @@ class IntervalPeriod(Period):
     def build(self, date, zone=None):
         date_condition = (date >= self.start) & (date < self.end)
         if self.zone is not None:
-            assert zone is not None
-            return date_condition*(zone == self.zone)
-        else:
-            return date_condition
+            if zone is not None:
+                return date_condition*(zone == self.zone)
+        return date_condition
 
 class AnnualDay(Period):
     def __init__(self, name, day, month, zone=None):
