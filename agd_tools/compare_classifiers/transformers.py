@@ -84,7 +84,8 @@ class FeatureChoice(Transformer):
             features_output += dict_features[f]
             #  Renvoie la liste des variables ("WW_mean", ...)
             #  par features ("meteo")
-
+        print("Il y a %s features selectionnées dans FeatureChoice"
+              % (len(features_output)))
         transformer_output = (XY_train.loc[:, 'Y'],
                               XY_test.loc[:, 'Y'],
                               XY_train.loc[:, features_output],
@@ -103,17 +104,17 @@ class FeatureSelection(Transformer):
 
 class FeatureSelectionRF(FeatureSelection):
 
-    def __init__(self, param_choice):  # Cmt prendre en compte param_choice ?
+    def __init__(self, param_choice_dict):
         # Initialiser tous les paramètres de la RF
-        self.n_estimators = 16
-        self.max_depth = None
-        self.bootstrap = True
-        self.criterion = 'gini'
-        self.class_weight = 'balanced'
-        self.n_jobs = -1
+        self.n_estimators = param_choice_dict['n_estimators']
+        self.max_depth = param_choice_dict['max_depth']
+        self.bootstrap = param_choice_dict['bootstrap']
+        self.criterion = param_choice_dict['criterion']
+        self.class_weight = param_choice_dict['class_weight']
+        self.n_jobs = param_choice_dict['n_jobs']
 
         # Seuil de selection
-        self.threshold = "1.25*mean"
+        self.threshold = param_choice_dict['threshold']
 
     def execute(self, transformer_input):
         """
@@ -140,25 +141,31 @@ class FeatureSelectionRF(FeatureSelection):
                                     threshold=self.threshold,
                                     prefit=True).transform(X_test)
 
+        n_features = X_train.shape[1]
+        n_features_selected = X_train_rf.shape[1]
+        print("Il y a %s - %s = %s features restantes suite à la RF"
+              % (n_features, (n_features-n_features_selected),
+                 n_features_selected))
+
         transformer_output = (Y_train, Y_test, X_train_rf, X_test_rf)
         return transformer_output
 
 
 class FeatureSelectionLR(FeatureSelection):
 
-    def __init__(self, param_choice):  # Cmt prendre en compte param_choice ?
+    def __init__(self, param_choice_dict):
         # Initialiser tous les paramètres de la RF
-        self.Cs = 2
-        self.fit_intercept = True
-        self.dual = False
-        self.penalty = 'l2'
-        self.scoring = 'roc_auc'
-        self.solver = 'lbfgs'
-        self.tol = 0.01
-        self.max_iter = 5
-        self.class_weight = 'balanced'
-        self.n_jobs = -1
-        self.refit = True
+        self.Cs = param_choice_dict['Cs']
+        self.fit_intercept = param_choice_dict['fit_intercept']
+        self.dual = param_choice_dict['dual']
+        self.penalty = param_choice_dict['penalty']
+        self.scoring = param_choice_dict['scoring']
+        self.solver = param_choice_dict['solver']
+        self.tol = param_choice_dict['tol']
+        self.max_iter = param_choice_dict['max_iter']
+        self.class_weight = param_choice_dict['class_weight']
+        self.n_jobs = param_choice_dict['n_jobs']
+        self.refit = param_choice_dict['refit']
 
     def execute(self, transformer_input):
         """
@@ -185,6 +192,12 @@ class FeatureSelectionLR(FeatureSelection):
         X_train_ridge = SelectFromModel(model_lcv, prefit=True).transform(X_train)
         X_test_ridge = SelectFromModel(model_lcv, prefit=True).transform(X_test)
 
+        n_features = X_train.shape[1]
+        n_features_selected = X_train_ridge.shape[1]
+        print("Il y a %s - %s = %s features restantes suite à la Ridge"
+              % (n_features, (n_features-n_features_selected),
+                 n_features_selected))
+
         transformer_output = (Y_train, Y_test, X_train_ridge, X_test_ridge)
         return transformer_output
 
@@ -200,21 +213,22 @@ class Classifier(Transformer):
 
 class ClassifierRF(Classifier):
 
-    def __init__(self, param_choice):  # Cmt prendre en compte param_choice ?
+    def __init__(self, param_choice_dict):
         # Initialiser tous les paramètres de la RF
-        self.n_estimators = 16
-        self.class_weight = "balanced"
-        self.criterion = "entropy"
-        self.boostrap = True
-        self.max_features = 3
-        self.min_samples_split = 1
-        self.min_samples_leaf = 3
-        self.max_depth = 3
+        self.n_estimators = param_choice_dict['n_estimators']
+        self.class_weight = param_choice_dict['class_weight']
+        self.criterion = param_choice_dict['criterion']
+        self.bootstrap = param_choice_dict['bootstrap']
+        self.max_features = param_choice_dict['max_features']
+        self.min_samples_split = param_choice_dict['min_samples_split']
+        self.min_samples_leaf = param_choice_dict['min_samples_leaf']
+        self.max_depth = param_choice_dict['max_depth']
+        self.n_jobs = param_choice_dict['n_jobs']
         # Initialiser tous les paramètres du Adaboost(RF)
-        self.n_estimators_ADA = 15
-        self.random_state_ADA = 70
-        self.learning_rate_ADA = 0.026
-        self.boosted_RF = False  # boolean
+        self.n_estimators_ADA = param_choice_dict['n_estimators_ADA']
+        self.random_state_ADA = param_choice_dict['random_state_ADA']
+        self.learning_rate_ADA = param_choice_dict['learning_rate_ADA']
+        self.boosted_RF = param_choice_dict['boosted_RF']  # boolean
 
     def execute(self, transformer_input):
         """
@@ -230,16 +244,18 @@ class ClassifierRF(Classifier):
         clf_RF = RandomForestClassifier(n_estimators=self.n_estimators,
                                         class_weight=self.class_weight,
                                         criterion=self.criterion,
-                                        bootstrap=self.boostrap,
+                                        bootstrap=self.bootstrap,
                                         max_features=self.max_features,
                                         min_samples_split=self.min_samples_split,
                                         min_samples_leaf=self.min_samples_leaf,
-                                        max_depth=self.max_depth)
+                                        max_depth=self.max_depth,
+                                        n_jobs=self.n_jobs)
+
         fitted_clf_RF = clf_RF.fit(X_train_sfm, Y_train)
 
         # -- compute results of RF
         predict_proba_RF = fitted_clf_RF.predict_proba(X_test_sfm)[:, 1]
-        output_RF = fitted_clf_RF.predict(X_test_sfm)
+        #output_RF = fitted_clf_RF.predict(X_test_sfm)
         auc_RF = roc_auc_score(Y_test, predict_proba_RF)
 
         if self.boosted_RF:
@@ -266,9 +282,10 @@ class ClassifierRF(Classifier):
 
 class ClassifierLR(Classifier):
 
-    def __init__(self, param_choice):
-        self.class_weight = 'balanced'
-        self.max_iter = 200
+    def __init__(self, param_choice_dict):
+        self.class_weight = param_choice_dict['class_weight']
+        self.max_iter = param_choice_dict['max_iter']
+        self.n_jobs = param_choice_dict['n_jobs']
 
     def execute(self, transformer_input):
         """
@@ -281,7 +298,9 @@ class ClassifierLR(Classifier):
 
         # -- Classifier RF
         clf_LR = LogisticRegression(class_weight=self.class_weight,
-                                    max_iter=self.max_iter)
+                                    max_iter=self.max_iter,
+                                    n_jobs=self.n_jobs)
+
         fitted_clf_LR = clf_LR.fit(X_train_sfm, Y_train)
         # -- compute results of LR
         predict_probas_LR = fitted_clf_LR.predict_proba(X_test_sfm)[:, 1]
@@ -294,9 +313,9 @@ class ClassifierLR(Classifier):
 
 class ClassifierLRConstant(Classifier):
 
-    def __init__(self, param_choice):
-        self.class_weight = 'balanced'
-        self.max_iter = 200
+    def __init__(self, param_choice_dict):
+        self.class_weight = param_choice_dict['class_weight']
+        self.max_iter = param_choice_dict['max_iter']
 
     def execute(self, transformer_input):
         """
@@ -307,7 +326,7 @@ class ClassifierLRConstant(Classifier):
         """
         (Y_train, Y_test, X_train_sfm, X_test_sfm) = transformer_input
 
-        # -- Classifier RF
+        # -- Classifier LRConstant
         clf_LRConstant = LogisticRegression(class_weight=self.class_weight,
                                             max_iter=self.max_iter)
         fitted_clf_LRConstant = clf_LRConstant.fit(X_train_sfm, Y_train)
@@ -329,7 +348,8 @@ class ClassifierLRConstant(Classifier):
 
         # -- Répartition des probas de chaque indivdu sur le test
         t_prob_moy_test = pd.DataFrame()
-        t_prob_moy_test = pd.merge(t_prob_moy.reset_index(), ref_iris_test, on='DCOMIRIS')
+        t_prob_moy_test = pd.merge(t_prob_moy.reset_index(),
+                                   ref_iris_test, on='DCOMIRIS')
 
         # -- Calcul de la roc_auc sur le test
         t_prob_test = t_prob_moy_test['overfitted_probas_LRConstant'].as_matrix()
