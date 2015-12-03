@@ -21,15 +21,15 @@ root = tree.Node(import_data_0)
 for task in tasks:
     root.add_leaf(task)
     
-# deep-first-search (process Tree & execute)
+# -- deep-first-search (process Tree & execute)
 root.deep_first_search_execute(None)
 
-# deep-first-search (process Tree & print)
+# -- deep-first-search (process Tree & print)
 result_list = []
 genealogy = []
 root.depth_first_search_print(result_list, genealogy)
 
-# Output results in a sexy-way
+# -- Output results in a sexy-way
 outputres = tree.OutputResults(result_list)  # Class instance
 outputres.compute_result_table(result_list)
 outputres.output_best_clf(result_list)
