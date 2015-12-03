@@ -24,7 +24,7 @@ class Transformer():
     """
     What : Classe des transformeurs (interface = documentation sur la classe)
     Règle : les transformeur prennent en entrée un "transformeur_input"
-            et sort un "transformeur_output" (parfois triplet).
+            et sortent un "transformeur_output" (parfois triplet).
     > Toutes les classes de transformer auront cette structure !
     """
     def __init__(self):
@@ -34,6 +34,14 @@ class Transformer():
     def execute(transformer_input):
         """ execution et return d'un nouveau transformer"""
         pass
+
+    def __str__(self):
+        """ convert transformers into string, for readable output """
+        return "This is a transformer"
+
+    def __repr__(self):
+        """ représentation sur-mesure d'un transformer et de ses paramètres """
+        return "%s (%s)" % (self.__class__.__name__, self.__dict__)
 
 
 #  -- Import
@@ -198,7 +206,7 @@ class ClassifierRF(Classifier):
         self.class_weight = "balanced"
         self.criterion = "entropy"
         self.boostrap = True
-        self.max_features = 10
+        self.max_features = 3
         self.min_samples_split = 1
         self.min_samples_leaf = 3
         self.max_depth = 3
@@ -206,7 +214,7 @@ class ClassifierRF(Classifier):
         self.n_estimators_ADA = 15
         self.random_state_ADA = 70
         self.learning_rate_ADA = 0.026
-        self.boosted_RF = True  # boolean
+        self.boosted_RF = False  # boolean
 
     def execute(self, transformer_input):
         """
@@ -245,14 +253,13 @@ class ClassifierRF(Classifier):
 
             # -- compute results of Adaboost(RF)
             predict_probas_ADA = fitted_clf_ADA.predict_proba(X_test_sfm)[:, 1]
-            output_ADA = fitted_clf_ADA.predict(X_test_sfm)
+            #output_ADA = fitted_clf_ADA.predict(X_test_sfm)
             auc_ADA = roc_auc_score(Y_test, predict_probas_ADA)
 
-            transformer_output = [(predict_proba_RF, output_RF, auc_RF),
-                                  (predict_probas_ADA, output_ADA, auc_ADA)]
+            transformer_output = [auc_RF, auc_ADA]
 
         else:
-            transformer_output = (predict_proba_RF, output_RF, auc_RF)
+            transformer_output = auc_RF
 
         return transformer_output
 
@@ -278,8 +285,55 @@ class ClassifierLR(Classifier):
         fitted_clf_LR = clf_LR.fit(X_train_sfm, Y_train)
         # -- compute results of LR
         predict_probas_LR = fitted_clf_LR.predict_proba(X_test_sfm)[:, 1]
-        output_LR = clf_LR.predict(X_train_sfm)
+        #output_LR = clf_LR.predict(X_train_sfm)
         auc_LR = roc_auc_score(Y_test, predict_probas_LR)
 
-        transformer_output = (predict_probas_LR, output_LR, auc_LR)
+        transformer_output = auc_LR
+        return transformer_output
+
+
+class ClassifierLRConstant(Classifier):
+
+    def __init__(self, param_choice):
+        self.class_weight = 'balanced'
+        self.max_iter = 200
+
+    def execute(self, transformer_input):
+        """
+        parametres : un quadruplet (Y_train, Y_test, X_train_sfm, X_test_sfm)
+                     contenant les features selectionnées par RF
+        return : un triplet (output_RF, predict_probas_RF, roc_auc_RF)
+                 contenant les résultats du clf Random Forest.
+        """
+        (Y_train, Y_test, X_train_sfm, X_test_sfm) = transformer_input
+
+        # -- Classifier RF
+        clf_LRConstant = LogisticRegression(class_weight=self.class_weight,
+                                            max_iter=self.max_iter)
+        fitted_clf_LRConstant = clf_LRConstant.fit(X_train_sfm, Y_train)
+        # -- compute results of LR on X_train (not test !)
+        overfitted_probas_LRConstant = pd.Series(fitted_clf_LRConstant.predict_proba(X_train_sfm)[:, 1])
+
+        # -- Solution dégueulasse et temporaires pour avoir les individus
+        (XY_train, XY_test, dict_features) = clean_table.construct_XY(history=True)  # import le plus simple possible
+        ref_iris_train = XY_train.reset_index()[['date', 'DCOMIRIS']].copy()
+        ref_iris_test = XY_test.reset_index()[['date', 'DCOMIRIS']].copy()
+
+        # -- Concat des probabilités obtenues avec les individus du train
+        t_prob_train = pd.concat([overfitted_probas_LRConstant,
+                                  ref_iris_train], axis=1)
+        t_prob_train.columns = ['overfitted_probas_LRConstant', 'date',
+                                'DCOMIRIS']
+        # -- Calcul des probabilités moyennes par individu (DCOMIRIS)
+        t_prob_moy = t_prob_train.groupby('DCOMIRIS')['overfitted_probas_LRConstant'].mean()
+
+        # -- Répartition des probas de chaque indivdu sur le test
+        t_prob_moy_test = pd.DataFrame()
+        t_prob_moy_test = pd.merge(t_prob_moy.reset_index(), ref_iris_test, on='DCOMIRIS')
+
+        # -- Calcul de la roc_auc sur le test
+        t_prob_test = t_prob_moy_test['overfitted_probas_LRConstant'].as_matrix()
+        auc_LRConstant = roc_auc_score(Y_test, t_prob_test)
+
+        transformer_output = auc_LRConstant
         return transformer_output
