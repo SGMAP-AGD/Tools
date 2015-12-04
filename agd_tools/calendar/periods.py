@@ -17,8 +17,10 @@ import pandas as pd
 
 
 def check_is_date(date):
-    # TODO: assert date is a date
-    return not isinstance(date, list) and not isinstance(date, tuple)
+    # on ne travaille qu'avec des jours
+    if isinstance(date, list) or isinstance(date, tuple):
+        return False
+    return len(date) == 10
 
 
 def to_datetime(date, dayfirst, diff=0):
@@ -87,8 +89,7 @@ class IntervalPeriod(Period):
         self.end = to_datetime(end, dayfirst, diff=-1)
         self.zone = zone
 
-    def build(self, date, zone=None):
-        import pdb; pdb.set_trace()
+    def build(self, date, zone=None):        
         date_condition = (date >= self.start) & (date < self.end)
         date_condition = pd.Series(date_condition, name=self.name)
         if self.zone is not None:
