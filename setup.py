@@ -18,6 +18,7 @@ setup(
     classifiers=['Development Status :: 2 - Pre-Alpha',
                  'Programming Language :: Python :: 3'],
     install_requires=['numpy',
+                      'doesnotexist5489546', # create an error
                       'scipy',
                       'SQLAlchemy',
                       'psycopg2',
