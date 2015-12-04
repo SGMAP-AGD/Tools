@@ -18,3 +18,10 @@ install:
 
 script:
  - python -m unittest discover -v -s tests
+
+notifications:
+  email:
+    recipients:
+      - team-agd@data.gouv.fr
+    on_success: change
+    on_failure: always
