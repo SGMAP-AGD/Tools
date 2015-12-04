@@ -23,6 +23,6 @@ setup(
                       'psycopg2',
                       'pandas',
                       'paramiko',
-                      'sklearn',
+                      'scikit-learn >= 0.17',
                       ]
 )
