@@ -27,7 +27,7 @@ def to_datetime(date, dayfirst, diff=0):
     '''return a Timestamp with a little modification if diff not null
        diff is a delay in day
     '''
-    date = pd.to_datetime(date, dayfirst=dayfirst) + pd.Timedelta(diff)
+    date = pd.to_datetime(date, dayfirst=dayfirst) + pd.Timedelta(diff, unit='d')
     return date
     
 
