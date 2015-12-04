@@ -21,6 +21,14 @@ def check_is_date(date):
     return not isinstance(date, list) and not isinstance(date, tuple)
 
 
+def to_datetime(date, dayfirst, diff=0):
+    '''return a Timestamp with a little modification if diff not null
+       diff is a delay in day
+    '''
+    date = pd.to_datetime(date, dayfirst=dayfirst) + pd.Timedelta(diff)
+    return date
+    
+
 class Period(object):
 
     def __init(self, name, zone):
@@ -56,7 +64,7 @@ class PunctualPeriod(Period):
     def __init__(self, name, date, zone=None, dayfirst=False):
         assert check_is_date(date)
         self.name = name
-        self.date = date
+        self.date = to_datetime(date, dayfirst, diff=0)
         self.zone = zone
 
     def build(self, date, zone=None):
@@ -71,12 +79,12 @@ class PunctualPeriod(Period):
 
 class IntervalPeriod(Period):
     '''following python stadard, start is included in the period, end is not'''
-    def __init__(self, name, start, end, zone=None, dayfirst=False):
+    def __init__(self, name, start, end, zone=None, dayfirst=True):
         assert check_is_date(start)
         assert check_is_date(end)
         self.name = name
-        self.start = start
-        self.end = end
+        self.start = to_datetime(start, dayfirst, diff=0)
+        self.end = to_datetime(end, dayfirst, diff=-1)
         self.zone = zone
 
     def build(self, date, zone=None):
@@ -89,7 +97,7 @@ class IntervalPeriod(Period):
         return date_condition
 
 class AnnualDay(Period):
-    def __init__(self, name, day, month, zone=None, dayfirst=False):
+    def __init__(self, name, day, month, zone=None, dayfirst=True):
         self.name = name
         self.day = day
         self.month = month
@@ -112,7 +120,7 @@ class MultiPeriod(Period):
         Be aware that if there is a zone, it should be the same for
         all periods
     '''
-    def __init__(self, name, list_of_periods, zone=None, dayfirst=False):
+    def __init__(self, name, list_of_periods, zone=None, dayfirst=True):
         assert isinstance(list_of_periods, list)
         self.name = name
         self.periods = []
