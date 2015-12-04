@@ -2,6 +2,9 @@
 """
 Created on Fri Dec  4 13:58:17 2015
 
+Calendrier utile en France
+On pourrait ajouter beaucoup de chose
+
 @author: Flo, Alexis
 """
 

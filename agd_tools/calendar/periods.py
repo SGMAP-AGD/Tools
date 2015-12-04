@@ -2,13 +2,8 @@
 """
 Created on Mon Sep  7 12:01:08 2015
 
-Ce fichier se décompose en deux parties.
-La première crée des objets utiles qui permette d'ajouter facilement des éléments
+Ce fichier crée des objets utiles qui permette d'ajouter facilement des éléments
 temporel à une analyse.
-La seconde crée des évenements standard.
-
-TODO: add a name attribute in period object and use it in build_period_dummies
-
 
 @author: Alexis
 """
@@ -32,7 +27,7 @@ def to_datetime(date, dayfirst, diff=0):
     
 
 class Period(object):
-
+    ''' classe générique d'une période '''
     def __init(self, name, zone):
         self.name = name
         self.zone = zone
@@ -86,7 +81,7 @@ class IntervalPeriod(Period):
         assert check_is_date(end)
         self.name = name
         self.start = to_datetime(start, dayfirst, diff=0)
-        self.end = to_datetime(end, dayfirst, diff=-1)
+        self.end = to_datetime(end, dayfirst, diff=0)
         self.zone = zone
 
     def build(self, date, zone=None):        
@@ -176,10 +171,5 @@ def build_period_dummies(df, list_of_periods,
         df[period.name] = period.build(date, zone).values
 
     return df
-
-#    # -- Jours particuliers
-#    ts['dayofmonth'] = date.day
-#    ts['dayofweek'] = date.dayofweek
-#    ts['weekend'] = (ts.dayofweek.isin([5, 6])).astype('int')
 
 
