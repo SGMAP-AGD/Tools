@@ -13,7 +13,7 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, Gradien
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.grid_search import GridSearchCV, RandomizedSearchCV
 
-from STSISI.python import clean_table
+import clean_table
 
 
 # -- REGLES
