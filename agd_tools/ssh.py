@@ -5,7 +5,6 @@ import os
 import sys
 import configparser
 
-import getpass
 import paramiko
 import pandas as pd
 
@@ -16,16 +15,6 @@ config = configparser.ConfigParser()
 path_config = os.path.dirname(os.path.realpath(__file__))
 config.read(os.path.join(path_config, "config.ini"))
 
-def _get_password():
-    phrase = "Entrez le mot de passe de votre clé ssh : "
-    if sys.stdin.isatty():
-        p = getpass.getpass(phrase)
-    else:
-        print(phrase)
-        #TODO: find a solution to mask the password
-        p = sys.stdin.readline().rstrip()
-    return p
-    
 
 def _get_connect():
     """ crée une connexion sftp sur le server secure et permet notamment
@@ -33,18 +22,15 @@ def _get_connect():
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    password = _get_password()
-    
     ssh.connect(config["SSH"]["host"],
                 username=config["SSH"]["username"],
-                key_filename=config["SSH"]["ssh_key"],
-                password=password)
+                key_filename=config["SSH"]["ssh_key"])
 
     return ssh
 
 
 def export_df(df, remotepath, sep=";"):
-    ''' exporter un pandas DataFrame en un csv sur le serveur 
+    ''' exporter un pandas DataFrame en un csv sur le serveur
 	- sep désigne le séparateur du csv
     '''
     # Save df to local csv
