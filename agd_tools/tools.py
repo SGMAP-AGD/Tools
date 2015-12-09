@@ -22,8 +22,8 @@ from sklearn.base import TransformerMixin
 
 # -- Initialise logging
 def init_logging(log_file_path):
-	logging.basicConfig(format='%(message)s', level=logging.INFO, filename=log_file_path)
-	logger = logging.getLogger(__name__)
+    logging.basicConfig(format='%(message)s', level=logging.INFO, filename=log_file_path)
+    logger = logging.getLogger(__name__)
 
 
 # -- Formated current timestamp
@@ -47,7 +47,7 @@ def log_info(message):
 class DataFrameImputer(TransformerMixin):
     def __init__(self):
         """Impute missing values.
-        Columns of dtype object ('O') are imputed with the most frequent value 
+        Columns of dtype object ('O') are imputed with the most frequent value
         in column.
 
         Columns of other types are imputed with mean of column.
@@ -106,6 +106,44 @@ def calculate_age_fromyear(year, today=None):
 
     return age
 
+
+def variation_rate(serie):
+    '''returns a basic variation rate y(t) - y(t-1)
+    from pandas Series
+    '''
+    v_rate = serie - serie.shift(1)
+    return v_rate
+
+
+def compute_interactions(df, interacting_feature_name):
+    """role: compute interactions between a specific feature
+             and other features of the df
+       parameters: -DataFrame Pandas containing all the features with whom
+                    you want to generate interactions.
+                   -string, the name of the feature you want to generate
+                    interactions with others.
+       returns: - a matrix of the shape [n_row,  2*n_col - 1]
+       """
+
+    assert interacting_feature_name in df.columns.tolist()
+    other_features_col = df.drop(str(interacting_feature_name),
+                                 axis=1).columns.tolist()
+    other_features_mat = df.drop(str(interacting_feature_name),
+                                 axis=1).as_matrix()
+
+    interacting_feature = df[str(interacting_feature_name)].as_matrix()
+    n_other_features = other_features_mat.shape[1]
+
+    res = df.copy()
+    for feature in range(0, n_other_features):
+        prod = interacting_feature * other_features_mat[:, feature]
+        res = np.column_stack((res, prod))
+
+    new_cols = [interacting_feature_name + '_cross_' +
+                col for col in other_features_col]
+    res_cols = df.columns.tolist() + new_cols
+    df_res = pd.DataFrame(res, columns=res_cols)
+    return df_res
 
 ###################
 # Scikit function #
