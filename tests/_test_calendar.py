@@ -2,7 +2,7 @@
 import unittest
 import pandas as pd
 
-from agd_tools.calendar.periods import (AnnualDay, PunctualPeriod, MultiPeriod,
+from agd_tools.calendar.periods import (AnnualDay, OneDayPeriod, MultiPeriod,
     IntervalPeriod)
 from agd_tools.calendar.France import Premier_Janvier
 
@@ -14,9 +14,6 @@ four_years_of_hours = pd.date_range('1/1/2012','31/12/2015', freq='H')
 
 
 class TestCalendar(unittest.TestCase):
-
-    four_years = pd.date_range('1/1/2012','31/12/2015', freq='D')
-    four_years_of_hours = pd.date_range('1/1/2012','31/12/2015', freq='H')
 
     def _generic_test(self, period, value_for_four_years):
         test_annual = period.build(four_years)
@@ -38,7 +35,7 @@ class TestCalendar(unittest.TestCase):
 
 
     def test_punctual(self):
-        puntual = PunctualPeriod('punctual', '12/12/2012')
+        puntual = OneDayPeriod('punctual', '12/12/2012')
         self._generic_test(puntual, 1)
 
     def test_interval(self):
