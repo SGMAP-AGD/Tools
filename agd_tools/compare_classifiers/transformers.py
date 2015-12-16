@@ -150,6 +150,15 @@ class FeatureSelectionRF(FeatureSelection):
         transformer_output = (Y_train, Y_test, X_train_rf, X_test_rf)
         return transformer_output
 
+class FeatureSelectionId(FeatureSelection):
+    """No feature selection."""
+
+    def __init__(self):
+        pass
+
+    def execute(self, transformer_input):
+        return transformer_input
+
 
 class FeatureSelectionLR(FeatureSelection):
 

@@ -1,30 +1,30 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Nov 25 17:20:05 2015
+Run a tree of experiments, loading and transforming only once for each step.
+
+Created on Wed Nov 25 17:20:05 2015.
 
 @author: Michel ,Flo
 """
 
-
-"""
-deux objectifs :
-1/ créer le graphe du parcours en profondeur
-2/ ne pas répéter les transformations déjà en mémoire
-"""
-
 import pandas as pd
+from agd_tools.compare_classifiers import transformers
 
 
 class Node():
-    ### Functions used for tree construction
+    """Implementation of the nodes of the tree.
+
+    This class should not be used outside.
+    """
 
     def __init__(self, transformer):
+        """Construct the tree."""
         self.transformer = transformer  # initialisation du tansformer en param
         self.children = []  # chaque Node() possède des enfants (hors feuilles)
         self.transformer_output = None  # change lors de l'execution
 
     def add_child(self, transformer):
-        """ Ajoute un enfant """
+        """Ajoute un enfant."""
         # -- l'enfant est initialisé pour execution
         child = Node(transformer)
         # -- puis ajouté à la liste des enfants
@@ -32,6 +32,11 @@ class Node():
         return child
 
     def get_child(self, transformer):
+        """Get a child.
+
+        Get a child having the same transformer as given in parameter.
+        If such a child does not exist, create it.
+        """
         # -- Le transformer est-il présent parmi les enfants du self.Node ?
         for c in self.children:
             if c.transformer == transformer:
@@ -39,6 +44,7 @@ class Node():
         return self.add_child(transformer)
 
     def add_leaf(self, genealogy):
+        """Add a leaf given whole genealogy from current node."""
         # -- Construction de la généalogie
         older_ancestror, *younger_ancestrors = genealogy
         # -- On get_child le plus vieux (FeatureChoice: 1er de liste)
@@ -47,10 +53,11 @@ class Node():
         if younger_ancestrors:
             child.add_leaf(younger_ancestrors)
 
-    ### Functions used to process the tree in a depth first search way
+    # Functions used to process the tree in a depth first search way
 
     def depth_first_search_execute(self, transformer_input):
-        """ Execution de l'arbre
+        """Execution de l'arbre.
+
         go as deep as possible, then backtracking and try to go as deep
         as possible, then backtracking.... until its finish
         https://www.youtube.com/watch?v=zLZhSSXAwxI
@@ -70,7 +77,7 @@ class Node():
         self.transformer_output = None  # free memory !
 
     def depth_first_search_print(self, result_list, genealogy):
-        """Print des résultats de l'arbre"""
+        """Print des résultats de l'arbre."""
         genealogy.append(repr(self.transformer))
         # -- On ne print que les transformer_output des feuilles.
         if self.children == []:
@@ -82,42 +89,51 @@ class Node():
         genealogy.pop()
 
 
-### -- Function to output results
-class OutputResults():
+class Tree():
+    """ Tree of experiments.
+    """
 
-    def __init__(self, result_list):
-        self.result_list = result_list
+    def add_tasks(self, tasks_list):
+        """Fonction permettant de construire l'arbre."""
+        for task in tasks_list:
+            self.root.add_leaf(task)
 
-    def compute_result_table(self, result_list):
+    def __init__(self, tasks_list):
+        """Construct the tree."""
+        self.result_list = []
+        self.genealogy = []
+
+        import_0 = transformers.ImportTransformer()    # init ImportTransformer
+        self.root = Node(import_0)  # construct the root
+        self.add_tasks(tasks_list)   # construct the rest of the tree
+
+    def run(self):
+        self.root.depth_first_search_execute(None)
+
+    def get_results(self):
+        self.result_list = []
+        self.genealogy = []
+        self.root.depth_first_search_print(self.result_list, self.genealogy)
+
+    def print_table(self):
         """
-        paramètres : result_list, issue de l'execution de
-                     depth_first_search_print()
+        Give pretty table output.
+
         returns : un dataframe où chaque ligne est une genalogy de la forme
                   (import, feature_choice, feature_selection, AUC)
-        but : rendre plus lisibe l'output brut de dfs_print()
         """
-        result_list = self.result_list
+        pd.options.display.max_colwidth = 500
         result_table = pd.DataFrame(columns=["import", "features_choice",
                                              "features_selection",
                                              "classifiers", "AUC"])
-        for genealogy in range(0, len(result_list)):
-            tmp = pd.DataFrame(result_list[genealogy][0]).T
+        for genealogy in range(0, len(self.result_list)):
+            tmp = pd.DataFrame(self.result_list[genealogy][0]).T
             tmp.columns = ["import", "features_choice",
                            "features_selection", "classifiers"]
-            tmp['AUC'] = result_list[genealogy][1]
+            tmp['AUC'] = self.result_list[genealogy][1]
             result_table = pd.concat([result_table, tmp], axis=0)
         tmp = None  # free memory
-        return result_table
 
-    def output_best_clf(self, result_list):
-        """
-        paramètres : result_list, issue de l'execution de
-                     depth_first_search_print()
-        returns : la genealogy ainsi que les paramètres associées ayant obtenu
-                  le meilleur AUC.
-        """
-        result_list = self.result_list
-        result_table = self.compute_result_table(result_list)
         best_clf = result_table[result_table.AUC ==
                                 max(result_table.AUC)].classifiers
-        return best_clf.tolist()
+        print(best_clf.tolist())
