@@ -8,10 +8,8 @@ import numpy as np
 import pandas as pd
 
 from sklearn.feature_selection import SelectFromModel
-from sklearn.metrics import roc_auc_score, roc_curve, precision_recall_curve, confusion_matrix, f1_score, log_loss
-from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
-from sklearn.grid_search import GridSearchCV, RandomizedSearchCV
 
 import clean_table
 
@@ -43,27 +41,14 @@ class Transformer():
         """ représentation sur-mesure d'un transformer et de ses paramètres """
         return "%s (%s)" % (self.__class__.__name__, self.__dict__)
 
-
-#  -- Import
-class ImportTransformer(Transformer):
-    """ Import de toutes les données """
+class TransformerId(Transformer):
+    """Does nothing, just pass the data to the next level."""
     def __init__(self):
-        self.iris = True
-        self.patrouilles = True
-        self.history = True
-        self.calendar = True
-        self.meteo = True
-        self.iris_dummy = True
+        pass
 
-    def execute(self, transformer_input):  # On importe tout
-        transformer_output = clean_table.construct_XY(iris=self.iris,
-                                                      patrouilles=self.patrouilles,
-                                                      history=self.history,
-                                                      calendar=self.calendar,
-                                                      meteo=self.meteo,
-                                                      iris_dummy=self.iris_dummy)
-        return transformer_output  # Triplet
-
+    def execute(self, transformer_input):
+        # transformer_input = (self.X_train, self.X_test, self.Y_train)
+        return transformer_input
 
 #  -- Choice
 class FeatureChoice(Transformer):
@@ -73,11 +58,10 @@ class FeatureChoice(Transformer):
 
     def execute(self, transformer_input):
         """
-        parametres : un triplet (XY_train, XY_test, dict_features)
-        return : Y_train, Y_test +  X_train et X_test contenant les features
-                 selectionnées par l'utilisateur (quadruplet)
+        parametres : (X_train, X_test, Y_train, dict_features)
+        return : same DataFrames with only chosen features
         """
-        (XY_train, XY_test, dict_features) = transformer_input
+        (X_train, X_test, Y_train, dict_features) = transformer_input
         features_output = []
 
         for f in self.features_choice:
@@ -86,10 +70,10 @@ class FeatureChoice(Transformer):
             #  par features ("meteo")
         print("Il y a %s features selectionnées dans FeatureChoice"
               % (len(features_output)))
-        transformer_output = (XY_train.loc[:, 'Y'],
-                              XY_test.loc[:, 'Y'],
-                              XY_train.loc[:, features_output],
-                              XY_test.loc[:, features_output])
+        transformer_output = (X_train.loc[:, features_output],
+                              X_test.loc[:, features_output],
+                              Y_train,
+                              features_output)
         return transformer_output
 
 
@@ -97,6 +81,10 @@ class FeatureChoice(Transformer):
 class FeatureSelection(Transformer):
     """
     Classe des selections de features (Transformer)
+
+    parametres : (X_train, X_test, Y_train, dict_features)
+
+    return : same DataFrames, with only selected features
     """
     def __init__(self):
         pass
@@ -117,13 +105,7 @@ class FeatureSelectionRF(FeatureSelection):
         self.threshold = param_choice_dict['threshold']
 
     def execute(self, transformer_input):
-        """
-        parametres : un quadruplet (Y_train, Y_test, X_train, X_test) contenant
-                     les features selectionnées
-        return : X_train_rf et X_test_rf contenant les features selectionnées
-                 par Random Forest
-        """
-        (Y_train, Y_test, X_train, X_test) = transformer_input
+        (X_train, X_test, Y_train, dict_features) = transformer_input
         model_rf = RandomForestClassifier(n_estimators=self.n_estimators,
                                           max_depth=self.max_depth,
                                           bootstrap=self.bootstrap,
@@ -141,13 +123,15 @@ class FeatureSelectionRF(FeatureSelection):
                                     threshold=self.threshold,
                                     prefit=True).transform(X_test)
 
+        dict_features = []          # TODO
+
         n_features = X_train.shape[1]
         n_features_selected = X_train_rf.shape[1]
         print("Il y a %s - %s = %s features restantes suite à la RF"
               % (n_features, (n_features-n_features_selected),
                  n_features_selected))
 
-        transformer_output = (Y_train, Y_test, X_train_rf, X_test_rf)
+        transformer_output = (X_train_rf, X_test_rf, Y_train, dict_features)
         return transformer_output
 
 class FeatureSelectionId(FeatureSelection):
@@ -177,13 +161,7 @@ class FeatureSelectionLR(FeatureSelection):
         self.refit = param_choice_dict['refit']
 
     def execute(self, transformer_input):
-        """
-        parametres : un quadruplet (Y_train, Y_test, X_train, X_test) contenant
-                     les features selectionnées
-        return : X_train_ridge et X_test_ridge contenant les features
-                 selectionnées par Ridge
-        """
-        (Y_train, Y_test, X_train, X_test) = transformer_input
+        (X_train, X_test, Y_train, dict_features) = transformer_input
         lcv = LogisticRegressionCV(Cs=self.Cs,
                                    fit_intercept=self.fit_intercept,
                                    dual=self.dual,
@@ -201,13 +179,15 @@ class FeatureSelectionLR(FeatureSelection):
         X_train_ridge = SelectFromModel(model_lcv, prefit=True).transform(X_train)
         X_test_ridge = SelectFromModel(model_lcv, prefit=True).transform(X_test)
 
+        dict_features = []      # TODO
+
         n_features = X_train.shape[1]
         n_features_selected = X_train_ridge.shape[1]
         print("Il y a %s - %s = %s features restantes suite à la Ridge"
               % (n_features, (n_features-n_features_selected),
                  n_features_selected))
 
-        transformer_output = (Y_train, Y_test, X_train_ridge, X_test_ridge)
+        transformer_output = (X_train_ridge, X_test_ridge, Y_train, dict_features)
         return transformer_output
 
 
@@ -217,6 +197,13 @@ class Classifier(Transformer):
     La classe des classifieurs
     """
     def __init__(self):
+        pass
+
+    def execute(self, transformer_input):
+        """
+        parametres : (X_train, X_test, Y_train, dict_features)
+        return : predicted probas for test subset
+        """
         pass
 
 
@@ -240,14 +227,8 @@ class ClassifierRF(Classifier):
         self.boosted_RF = param_choice_dict['boosted_RF']  # boolean
 
     def execute(self, transformer_input):
-        """
-        parametres : un quadruplet (Y_train, Y_test, X_train_sfm, X_test_sfm)
-                     contenant les features selectionnées par RF
-        return : un triplet (output_RF, predict_probas_RF, roc_auc_RF)
-                 contenant les résultats du clf Random Forest.
-        """
         #  sfm = Select From Model
-        (Y_train, Y_test, X_train_sfm, X_test_sfm) = transformer_input
+        (X_train, X_test, Y_train, dict_features) = transformer_input
         # -- Classifier RF
         np.random.seed(100)  # Il faudra penser à intégrer les SEED
         clf_RF = RandomForestClassifier(n_estimators=self.n_estimators,
@@ -260,12 +241,7 @@ class ClassifierRF(Classifier):
                                         max_depth=self.max_depth,
                                         n_jobs=self.n_jobs)
 
-        fitted_clf_RF = clf_RF.fit(X_train_sfm, Y_train)
-
-        # -- compute results of RF
-        predict_proba_RF = fitted_clf_RF.predict_proba(X_test_sfm)[:, 1]
-        #output_RF = fitted_clf_RF.predict(X_test_sfm)
-        auc_RF = roc_auc_score(Y_test, predict_proba_RF)
+        fitted_clf_RF = clf_RF.fit(X_train, Y_train)
 
         if self.boosted_RF:
             # -- Classifier Adaboost(RF)
@@ -274,19 +250,12 @@ class ClassifierRF(Classifier):
                                          random_state=self.random_state_ADA,
                                          learning_rate=self.learning_rate_ADA)
 
-            fitted_clf_ADA = clf_ADA.fit(X_train_sfm, Y_train)
-
-            # -- compute results of Adaboost(RF)
-            predict_probas_ADA = fitted_clf_ADA.predict_proba(X_test_sfm)[:, 1]
-            #output_ADA = fitted_clf_ADA.predict(X_test_sfm)
-            auc_ADA = roc_auc_score(Y_test, predict_probas_ADA)
-
-            transformer_output = [auc_RF, auc_ADA]
-
+            fitted_clf_ADA = clf_ADA.fit(X_train, Y_train)
+            predict_probas = fitted_clf_ADA.predict_proba(X_test)[:, 1]
         else:
-            transformer_output = auc_RF
+            predict_proba = fitted_clf_RF.predict_proba(X_test)[:, 1]
 
-        return transformer_output
+        return predict_proba
 
 
 class ClassifierLR(Classifier):
@@ -297,27 +266,18 @@ class ClassifierLR(Classifier):
         self.n_jobs = param_choice_dict['n_jobs']
 
     def execute(self, transformer_input):
-        """
-        parametres : un quadruplet (Y_train, Y_test, X_train_sfm, X_test_sfm)
-                     contenant les features selectionnées par RF
-        return : un triplet (output_RF, predict_probas_RF, roc_auc_RF)
-                 contenant les résultats du clf Random Forest.
-        """
-        (Y_train, Y_test, X_train_sfm, X_test_sfm) = transformer_input
+        (X_train, X_test, Y_train, dict_features) = transformer_input
 
         # -- Classifier RF
         clf_LR = LogisticRegression(class_weight=self.class_weight,
                                     max_iter=self.max_iter,
                                     n_jobs=self.n_jobs)
 
-        fitted_clf_LR = clf_LR.fit(X_train_sfm, Y_train)
-        # -- compute results of LR
-        predict_probas_LR = fitted_clf_LR.predict_proba(X_test_sfm)[:, 1]
-        #output_LR = clf_LR.predict(X_train_sfm)
-        auc_LR = roc_auc_score(Y_test, predict_probas_LR)
+        fitted_clf_LR = clf_LR.fit(X_train, Y_train)
 
-        transformer_output = auc_LR
-        return transformer_output
+        predict_probas_LR = fitted_clf_LR.predict_proba(X_test)[:, 1]
+
+        return predict_probas_LR
 
 
 class ClassifierLRConstant(Classifier):
@@ -327,20 +287,14 @@ class ClassifierLRConstant(Classifier):
         self.max_iter = param_choice_dict['max_iter']
 
     def execute(self, transformer_input):
-        """
-        parametres : un quadruplet (Y_train, Y_test, X_train_sfm, X_test_sfm)
-                     contenant les features selectionnées par RF
-        return : un triplet (output_RF, predict_probas_RF, roc_auc_RF)
-                 contenant les résultats du clf Random Forest.
-        """
-        (Y_train, Y_test, X_train_sfm, X_test_sfm) = transformer_input
+        (X_train, X_test, Y_train, dict_features) = transformer_input
 
         # -- Classifier LRConstant
         clf_LRConstant = LogisticRegression(class_weight=self.class_weight,
                                             max_iter=self.max_iter)
-        fitted_clf_LRConstant = clf_LRConstant.fit(X_train_sfm, Y_train)
+        fitted_clf_LRConstant = clf_LRConstant.fit(X_train, Y_train)
         # -- compute results of LR on X_train (not test !)
-        overfitted_probas_LRConstant = pd.Series(fitted_clf_LRConstant.predict_proba(X_train_sfm)[:, 1])
+        overfitted_probas_LRConstant = pd.Series(fitted_clf_LRConstant.predict_proba(X_train)[:, 1])
 
         # -- Solution dégueulasse et temporaires pour avoir les individus
         (XY_train, XY_test, dict_features) = clean_table.construct_XY(history=True)  # import le plus simple possible
@@ -362,7 +316,5 @@ class ClassifierLRConstant(Classifier):
 
         # -- Calcul de la roc_auc sur le test
         t_prob_test = t_prob_moy_test['overfitted_probas_LRConstant'].as_matrix()
-        auc_LRConstant = roc_auc_score(Y_test, t_prob_test)
 
-        transformer_output = auc_LRConstant
-        return transformer_output
+        return t_prob_test

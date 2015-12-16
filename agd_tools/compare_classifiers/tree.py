@@ -9,7 +9,10 @@ Created on Wed Nov 25 17:20:05 2015.
 
 import pandas as pd
 from agd_tools.compare_classifiers import transformers
+from sklearn.metrics import roc_auc_score, roc_curve, auc
+from matplotlib import pyplot as plt
 
+import clean_table
 
 class Node():
     """Implementation of the nodes of the tree.
@@ -76,8 +79,8 @@ class Node():
 
         self.transformer_output = None  # free memory !
 
-    def depth_first_search_print(self, result_list, genealogy):
-        """Print des résultats de l'arbre."""
+    def depth_first_search_results(self, result_list, genealogy):
+        """Collecte les résultats de l'arbre."""
         genealogy.append(repr(self.transformer))
         # -- On ne print que les transformer_output des feuilles.
         if self.children == []:
@@ -85,7 +88,7 @@ class Node():
             result_list.append((final_genealogy, self.transformer_output))
 
         for c in self.children:
-            c.depth_first_search_print(result_list, genealogy)
+            c.depth_first_search_results(result_list, genealogy)
         genealogy.pop()
 
 
@@ -100,40 +103,71 @@ class Tree():
 
     def __init__(self, tasks_list):
         """Construct the tree."""
+        root_tr = transformers.TransformerId()    # init ImportTransformer
+        self.root = Node(root_tr)  # construct the root
+        self.add_tasks(tasks_list)   # construct the rest of the tree
+
         self.result_list = []
         self.genealogy = []
 
-        import_0 = transformers.ImportTransformer()    # init ImportTransformer
-        self.root = Node(import_0)  # construct the root
-        self.add_tasks(tasks_list)   # construct the rest of the tree
+        self.X_train = None
+        self.X_test = None
+        self.Y_train = None
+        self.Y_test = None
+        self.dict_features = None
 
     def run(self):
-        self.root.depth_first_search_execute(None)
+        nuplet = clean_table.construct_XY(
+            iris=False,
+            patrouilles=False,
+            history=True,
+            calendar=False,
+            meteo=False,
+            iris_dummy=False)
+        self.X_train, self.X_test, self.Y_train, self.Y_test, self.dict_features = nuplet
+
+        self.root.depth_first_search_execute(
+            (self.X_train, self.X_test, self.Y_train, self.dict_features))
 
     def get_results(self):
         self.result_list = []
         self.genealogy = []
-        self.root.depth_first_search_print(self.result_list, self.genealogy)
+        self.root.depth_first_search_results(self.result_list, self.genealogy)
 
-    def print_table(self):
+    def get_table(self):
         """
-        Give pretty table output.
-
-        returns : un dataframe où chaque ligne est une genalogy de la forme
-                  (import, feature_choice, feature_selection, AUC)
+        Give pretty table summarizing the tasks and their ROC AUC.
         """
-        pd.options.display.max_colwidth = 500
-        result_table = pd.DataFrame(columns=["import", "features_choice",
-                                             "features_selection",
-                                             "classifiers", "AUC"])
-        for genealogy in range(0, len(self.result_list)):
-            tmp = pd.DataFrame(self.result_list[genealogy][0]).T
-            tmp.columns = ["import", "features_choice",
-                           "features_selection", "classifiers"]
-            tmp['AUC'] = self.result_list[genealogy][1]
-            result_table = pd.concat([result_table, tmp], axis=0)
-        tmp = None  # free memory
+        results = list(map(lambda r: r[0] + [r[1]], self.result_list))
+        table = pd.DataFrame(results)
+        table.columns = ["Import", "Feature Choice", "Feature Selection", "Classifier", "proba"]
+        table['AUC'] = table.proba.map(lambda p: roc_auc_score(self.Y_test, p))
+        table.drop(['Import'], axis=1, inplace=True)
+        table.drop(['proba'], axis=1, inplace=True)
+        return(table)
 
-        best_clf = result_table[result_table.AUC ==
-                                max(result_table.AUC)].classifiers
-        print(best_clf.tolist())
+    def get_roc(self, indexes):
+        """
+        Compute ROC curves for tasks whose indexes are listed in 'indexes'.
+
+        The curves are plotted with pyplot. They are labeled by their indexes
+        in the 'results' list of the Tree. Use 'get_table' to get details about
+        the corresponding tasks.
+        """
+        results = list(map(lambda r: r[0] + [r[1]], self.result_list))
+        table = pd.DataFrame(results)
+        table.columns = ["Import", "Feature Choice", "Feature Selection", "Classifier", "proba"]
+        roc_curves = table.proba.map(lambda p: roc_curve(self.Y_test, p))
+
+        plt.figure()
+        for i in indexes:
+            roc = roc_curves[i]
+            plt.plot(roc[0], roc[1], label='ROC curve n°%d (area = %0.2f)' % (i, auc(roc[0], roc[1])))
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver operating characteristics')
+        plt.legend(loc="lower right")
+        plt.show()
