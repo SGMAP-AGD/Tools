@@ -19,7 +19,6 @@ from sklearn.base import TransformerMixin
 
 # Logger #
 
-
 # -- Initialise logging
 def init_logging(log_file_path):
     logging.basicConfig(format='%(message)s', level=logging.INFO, filename=log_file_path)
@@ -91,12 +90,12 @@ def feature_selection(train_instances):
     return selector
 
 
-# Others #
+# Basic operations #
 def calculate_age_fromyear(year, today=None):
     ''' Calcule l'age en fonction du birthday et de la date d'aujourd'hui
     ou d'une date définie'''
     if today is None:
-        today = date.today()
+        today = datetime.date.today()
         age = today.year - int(year)
     else:
         try:
@@ -149,6 +148,7 @@ def compute_interactions(df, interacting_feature_name):
 # Scikit function #
 ###################
 
+
 # -- grid_search
 def report_grid(grid_scores, n_top=3):
     '''return the 3 best models : score & std(score) on CV samples'''
@@ -160,3 +160,29 @@ def report_grid(grid_scores, n_top=3):
               np.std(score.cv_validation_scores)))
         print("Parameters: {0}".format(score.parameters))
         print("")
+
+
+###############
+#     geo     #
+###############
+
+def point_in_poly(x, y, poly):
+    """Determine if a point is inside a given polygon or not
+    Polygon is a list of (x,y) pairs. This function
+    returns True or False.  The algorithm is called
+    the "Ray Casting Method".
+    """
+    n = len(poly)
+    inside = False
+    p1x, p1y = poly[0]
+    for i in range(n+1):
+        p2x, p2y = poly[i % n]
+        if y > min(p1y, p2y):
+            if y <= max(p1y, p2y):
+                if x <= max(p1x, p2x):
+                    if p1y != p2y:
+                        xints = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                    if p1x == p2x or x <= xints:
+                        inside = not inside
+        p1x, p1y = p2x, p2y
+    return inside

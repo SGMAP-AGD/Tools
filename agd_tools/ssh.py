@@ -31,7 +31,7 @@ def _get_connect():
 
 def export_df(df, remotepath, sep=";"):
     ''' exporter un pandas DataFrame en un csv sur le serveur
-	- sep désigne le séparateur du csv
+        - sep désigne le séparateur du csv
     '''
     # Save df to local csv
     current_dir = os.getcwd()
@@ -40,8 +40,8 @@ def export_df(df, remotepath, sep=";"):
 
     ssh = _get_connect()
     sftp = ssh.open_sftp()
-    sftp.put(filepath, remotepath) # Put the csv over sftp
-    os.remove(filepath) # Delete local csv
+    sftp.put(filepath, remotepath)  # Put the csv over sftp
+    os.remove(filepath)  # Delete local csv
     ssh.close()
 
 
