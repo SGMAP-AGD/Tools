@@ -24,16 +24,6 @@ def to_datetime(date, dayfirst, diff=0):
     '''
     date = pd.to_datetime(date, dayfirst=dayfirst) + pd.Timedelta(diff, unit='d')
     return date
-    
-
-class Period(object):
-    ''' classe générique d'une période '''
-    def __init(self, name, zone):
-        self.name = name
-        self.zone = zone
-
-    def build(self):
-        raise NotImplementedError
 
 
 def guess_Period_type(obj, name, zone):
@@ -44,11 +34,11 @@ def guess_Period_type(obj, name, zone):
         - IntervalPeriod
     '''
     if check_is_date(obj):
-        return PunctualPeriod(name, obj, zone)
+        return OneDayPeriod(name, obj, zone)
     else:
         assert isinstance(obj, list) or isinstance(obj, tuple)
         if len(obj) == 1:
-            return  PunctualPeriod(name, obj[0], zone)
+            return  OneDayPeriod(name, obj[0], zone)
         if len(obj) == 2:
             return  IntervalPeriod(name, obj[0], obj[1], zone)
         if len(obj) > 2:
@@ -57,21 +47,14 @@ def guess_Period_type(obj, name, zone):
                 )
 
 
-class PunctualPeriod(Period):
-    def __init__(self, name, date, zone=None, dayfirst=False):
-        assert check_is_date(date)
+class Period(object):
+    ''' classe générique d'une période '''
+    def __init(self, name, zone):
         self.name = name
-        self.date = to_datetime(date, dayfirst, diff=0)
         self.zone = zone
 
-    def build(self, date, zone=None):
-        date_condition = (date == self.date)
-        date_condition = pd.Series(date_condition, name=self.name)
-        if self.zone is not None:
-            if zone is not None:
-                return date_condition*(zone == self.zone)
-        else:
-            return date_condition
+    def build(self):
+        raise NotImplementedError
 
 
 class IntervalPeriod(Period):
@@ -84,13 +67,23 @@ class IntervalPeriod(Period):
         self.end = to_datetime(end, dayfirst, diff=0)
         self.zone = zone
 
-    def build(self, date, zone=None):        
+    def build(self, date, zone=None):
         date_condition = (date >= self.start) & (date < self.end)
         date_condition = pd.Series(date_condition, name=self.name)
         if self.zone is not None:
             if zone is not None:
                 return date_condition*(zone == self.zone)
         return date_condition
+
+
+class OneDayPeriod(IntervalPeriod):
+    def __init__(self, name, date, zone=None, dayfirst=False):
+        assert check_is_date(date)
+        self.name = name
+        self.start = to_datetime(date, dayfirst, diff=0)
+        self.end = to_datetime(date, dayfirst, diff=1)
+        self.zone = zone
+
 
 class AnnualDay(Period):
     def __init__(self, name, day, month, zone=None, dayfirst=True):
