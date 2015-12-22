@@ -24,5 +24,6 @@ setup(
                       'pandas',
                       'paramiko',
                       'scikit-learn >= 0.17',
+                      'geographiclib',
                       ]
 )
