@@ -9,10 +9,11 @@ from agd_tools import pg
 
 __author__ = "Paul"
 
-# Tests should be independant (so they can be run in parallel, easily debugged)
-unittest.TestLoader.sortTestMethodsUsing = None
 
 class TestPGToolsMethods(unittest.TestCase):
+    """Tests should be independant (so they can be run in parallel,
+    easily debugged). For convenience this is not yet the case.
+    """
 
     def test_conn_string(self):
         conn_string = pg.get_conn_string(host="localhost",
@@ -28,7 +29,7 @@ class TestPGToolsMethods(unittest.TestCase):
                           "client_encoding='some-exotic-encoding'"
         self.assertEqual(conn_string, expected_string)
 
-    def test_export_table(self):
+    def test_1_export_table(self):
         table_name = "iris_unittest"
         iris = pd.read_csv("tests/iris.csv")
         pg.export_df(df=iris, table_name=table_name)
@@ -37,7 +38,7 @@ class TestPGToolsMethods(unittest.TestCase):
                                  table_name + "'")
         self.assertEqual(1, results['count'][0])
 
-    def test_import_table(self):
+    def test_2_import_table(self):
         table_name = "iris_unittest"
         iris = pg.import_table(table_name)
         size_table = pg.execute_sql("SELECT COUNT(*) "
@@ -45,7 +46,7 @@ class TestPGToolsMethods(unittest.TestCase):
         size_df = len(iris)
         self.assertEqual(size_df, size_table['count'][0])
 
-    def test_drop_table(self):
+    def test_3_drop_table(self):
         table_name = "iris_unittest"
         drop = pg.execute_sql("DROP TABLE " + table_name + "", commit=True)
         results = pg.execute_sql("SELECT COUNT(relname) "
