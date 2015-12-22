@@ -9,6 +9,8 @@ from agd_tools import pg
 
 __author__ = "Paul"
 
+# Tests should be independant (so they can be run in parallel, easily debugged)
+unittest.TestLoader.sortTestMethodsUsing = None
 
 class TestPGToolsMethods(unittest.TestCase):
 
