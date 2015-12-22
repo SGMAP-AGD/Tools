@@ -1,0 +1,7 @@
+[PostgreSQL]
+
+host = localhost
+user = travis
+dbname = travis_test
+port = 5432
+

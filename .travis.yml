@@ -3,6 +3,9 @@ language: python
 python:
  - "3.4"
 
+services:
+ - postgresql
+
 # Scipy/Numpy need to be installed separately,
 # see https://github.com/travis-ci/travis-ci/issues/2650 and
 # https://gist.github.com/dan-blanchard/7045057
@@ -15,6 +18,10 @@ before_install:
 install:
  - conda install --yes numpy scipy pandas
  - pip install .
+
+before_script:
+ - psql -c 'create database travis_test;' -U travis
+ - cp agd_tools/config.ini.travis agd_tools/config.ini
 
 script:
  - python -m unittest discover -v -s tests
