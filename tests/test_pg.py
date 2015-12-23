@@ -38,9 +38,9 @@ class TestPGToolsMethods(unittest.TestCase):
                                  table_name + "'")
         self.assertEqual(1, results['count'][0])
 
-    def test_2_import_table(self):
+    def test_2_import_df(self):
         table_name = "iris_unittest"
-        iris = pg.import_table(table_name)
+        iris = pg.import_df(table_name)
         size_table = pg.execute_sql("SELECT COUNT(*) "
                                     "FROM " + table_name)
         size_df = len(iris)
