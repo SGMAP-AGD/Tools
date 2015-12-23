@@ -3,4 +3,5 @@
 host = localhost
 user = postgres
 dbname = travis_test
+schema = schema_test
 port = 5432

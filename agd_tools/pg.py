@@ -18,6 +18,10 @@ __author__ = "Florian, Paul, Michel"
 # Read config file
 config = configparser.ConfigParser()
 config.read(os.path.dirname(os.path.realpath(__file__)) + "/config.ini")
+config_host = config["PostgreSQL"]["host"]
+config_dbname = config["PostgreSQL"]["dbname"]
+config_user = config["PostgreSQL"]["user"]
+config_schema = config["PostgreSQL"]["schema"]
 
 
 def get_conn_string(host, dbname, user, password="", client_encoding="utf-8"):
@@ -50,9 +54,9 @@ def execute_sql(sql, commit=False):
     :return: A dataframe or nothing
     :rtype: pandas.DataFrame
     """
-    conn_string = get_conn_string(host=config["PostgreSQL"]["host"],
-                                  dbname=config["PostgreSQL"]["dbname"],
-                                  user=config["PostgreSQL"]["user"])
+    conn_string = get_conn_string(host=config_host,
+                                  dbname=config_dbname,
+                                  user=config_user)
     conn = psycopg2.connect(conn_string)
     cur = conn.cursor()
     cur.execute(sql)
@@ -70,15 +74,25 @@ def execute_sql(sql, commit=False):
             conn.commit()
 
 
-def export_df(df, table_name, schema="public", if_exists='fail'):
+def export_df(df, table_name, schema=None, if_exists='fail'):
     """Export a pandas Dataframe to a PostgreSQL table."""
-    engine = get_engine(host=config["PostgreSQL"]["host"],
-                        dbname=config["PostgreSQL"]["dbname"],
-                        user=config["PostgreSQL"]["user"])
+
+    if not schema:
+        schema = config_schema
+
+    engine = get_engine(host=config_host,
+                        dbname=config_dbname,
+                        user=config_user)
+
     return df.to_sql(table_name, engine, schema=schema, if_exists=if_exists)
 
 
-def import_df(table_name, schema="public"):
+def import_df(table_name, schema=None):
     """Import a pandas Dataframe from a PostgreSQL table."""
+
+    if not schema:
+        schema = config_schema
+
     sql = "SELECT * FROM " + schema + "." + table_name
+
     return execute_sql(sql)

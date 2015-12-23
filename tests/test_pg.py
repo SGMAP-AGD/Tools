@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-
 import pandas as pd
+import configparser
+import os
 
 from agd_tools import pg
 
@@ -40,15 +41,24 @@ class TestPGToolsMethods(unittest.TestCase):
 
     def test_2_import_df(self):
         table_name = "iris_unittest"
-        iris = pg.import_df(table_name)
-        size_table = pg.execute_sql("SELECT COUNT(*) "
-                                    "FROM " + table_name)
-        size_df = len(iris)
-        self.assertEqual(size_df, size_table['count'][0])
+        iris1 = pg.import_df(table_name)
+        iris2 = pd.read_csv("tests/iris.csv")
+
+        size1 = len(iris1)
+        size2 = len(iris2)
+        self.assertEqual(size1, size2)
 
     def test_3_drop_table(self):
+        config = configparser.ConfigParser()
+        config.read(os.path.dirname(
+            os.path.dirname(os.path.realpath(__file__))) +
+            "/agd_tools/config.ini"
+        )
+        schema = config["PostgreSQL"]["schema"]
+
         table_name = "iris_unittest"
-        drop = pg.execute_sql("DROP TABLE " + table_name + "", commit=True)
+        drop = pg.execute_sql("DROP TABLE " + schema + "." + table_name + "",
+            commit=True)
         results = pg.execute_sql("SELECT COUNT(relname) "
                                  "FROM pg_class WHERE relname='"
                                  "" + table_name + "'")
