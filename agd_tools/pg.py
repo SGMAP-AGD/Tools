@@ -33,8 +33,8 @@ def get_conn_string(host, dbname, user, password="", client_encoding="utf-8"):
 
 def get_engine(host, dbname, user, password="", port=5432,
                client_encoding="utf-8"):
-   """Private function. Return a sqlalchemy engine.
-   """
+    """Private function. Return a sqlalchemy engine.
+    """
     conn_string = "postgresql://" + user + ":" + password + "@" + \
                   host + ":" + str(port) + "/" + dbname
     return create_engine(conn_string, client_encoding=client_encoding)
