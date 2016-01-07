@@ -1,0 +1,11 @@
+[PostgreSQL]
+host = localhost
+user = yourname
+dbname = yourdb
+schema = yourschema
+port = 5432
+
+[SSH]
+host = iphost 
+username = yourname 
+ssh_key = /path/to/your/key/id_rsa

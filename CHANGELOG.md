@@ -1,4 +1,7 @@
 
+## next release
+* [CHANGE] config.ini to config.ini.example 
+
 ## 0.0.5
 * [FIX] password paramiko
 * [ADD] geographic features geo.py

@@ -23,18 +23,11 @@ pip install -e .
 
 ### Config file
 
-agd_tools uses a config file to access your database. This file should be named `config.ini`. If you installed a development version of `agd_tools`, this file should be located at `/home/you/projects/agd_tools/agd_tools/config.ini`. Otherwise the file should be located at '~/.virtualenvs/myproject/lib/python3.x/site-packages/agd_tools/config.ini'. Here is a `config.ini` file :
+`agd_tools` uses a config file to access your database. This file should be named `config.ini`. 
+If you installed a development version of `agd_tools`, 
+this file should be located at `/home/you/projects/agd_tools/agd_tools/config.ini`.
+ Otherwise the file should be located at 
+'~/.virtualenvs/myproject/lib/python3.x/site-packages/agd_tools/config.ini'. 
 
-```ini
-[PostgreSQL]
-host = localhost
-user = username
-dbname = mydb
-schema = myschema
-port = 5432
 
-[SSH]
-host = distanthost.com
-username = user
-ssh_key = /home/user/.ssh/id_rsa
-```
+See `config.ini.example` to see syntax & keys

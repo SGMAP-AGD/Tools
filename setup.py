@@ -14,7 +14,7 @@ setup(
     long_description=open('README.md').read(),
     packages=find_packages(),
     url="https://github.com/SGMAP-AGD/Tools",
-    package_data={'agd_tools': ['config.ini']},
+    package_data={'agd_tools': ['config.ini.example']},
     classifiers=['Development Status :: 2 - Pre-Alpha',
                  'Programming Language :: Python :: 3'],
     install_requires=['numpy',
