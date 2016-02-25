@@ -27,8 +27,12 @@ http://geodesie.ign.fr/contenu/fichiers/documentation/rgf93/Lambert-93.pdf
 http://geodesie.ign.fr/contenu/fichiers/documentation/algorithmes/notice/NTG_71.pdf
 """
 
+import sys
 from math import cos, sin, atan, tan, pi, sqrt, pow, log
+import numpy as np
 from geographiclib.geodesic import Geodesic
+from shapely.geometry import shape, MultiPolygon, Point
+from IPython.display import clear_output
 
 
 # Define RGF93 and Lambert 93 constants
@@ -90,7 +94,7 @@ def function_rho(phi):
 rho_phi0 = function_rho(phi0)
 
 
-# Conversion functions
+# -- Conversion functions
 
 def carto2geo(x, y, precision_deg=1e-12):
     """Convert cartographic coordinates to geographic coordinates.
@@ -137,7 +141,7 @@ def geo2carto(phi_deg, lambd_deg):
     return (x, y)
 
 
-# Distance functions
+# -- Distance functions
 
 def distance_geo(phi_a_deg, lambd_a_deg, phi_b_deg, lambd_b_deg):
     """Compute the great-circle distance between two points.
@@ -154,3 +158,33 @@ def distance_carto(x_a, y_a, x_b, y_b):
     phi_a_deg, lambd_a_deg = carto2geo(x_a, y_a)
     phi_b_deg, lambd_b_deg = carto2geo(x_b, y_b)
     return distance_geo(phi_a_deg, lambd_a_deg, phi_b_deg, lambd_b_deg)
+
+# -- Point in DCOMIRIS
+
+    def point_in_DCOMIRIS(df, shapefile, col_lambert93):
+        """parametres : - df : pandas DataFrame contenant les coordonnées
+                        - shapefile : contenant les polygones des DCOMIRIS
+                                      (use fiona.open())
+                        - col_lambert93 : liste des noms des colonnes
+                                          (lambert93_X, lambert93_Y)
+           return : -res_dict : dictionnaire numpy au format
+                                {numero_coordonnees: DCOMIRIS}
+           dependencies :  shapely, numpy, sys, Ipython.display
+        """
+
+        Multi = MultiPolygon([shape(pol['geometry']) for pol in shapefile])
+        mat = df.ix[:, col_lambert93].as_matrix()
+        #l_iris = []
+        res_dict = {}
+        for k in range(0, len(mat)):  # parcours des coordonnées
+            for iris_poly in range(1, len(Multi)):  # parcours des polygones
+                if Point(mat[k]).within(Multi[iris_poly]):  # XY in poly ?
+                    res_dict[k] = shapefile[iris_poly]['properties']['DCOMIRIS']
+                    # Print avancement
+                    print("%s / %s" % (k, len(mat) - 1))
+                    clear_output(wait=True)
+                    sys.stdout.flush()
+                    break
+                else:
+                    res_dict[k] = np.nan
+        return res_dict
