@@ -1,3 +1,5 @@
+## 0.0.5
+* [ADD] point_in_DCOMIRIS in geo.py
 
 ## next release
 * [CHANGE] config.ini to config.ini.example 
