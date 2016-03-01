@@ -150,6 +150,7 @@ def distance_geo(phi_a_deg, lambd_a_deg, phi_b_deg, lambd_b_deg):
     """
     return Geodesic.WGS84.Inverse(phi_a_deg, lambd_a_deg, phi_b_deg, lambd_b_deg)['s12']
 
+
 def distance_carto(x_a, y_a, x_b, y_b):
     """Compute the great-circle distance between two points.
 
@@ -161,30 +162,31 @@ def distance_carto(x_a, y_a, x_b, y_b):
 
 # -- Point in DCOMIRIS
 
-    def point_in_DCOMIRIS(df, shapefile, col_lambert93):
-        """parametres : - df : pandas DataFrame contenant les coordonnées
-                        - shapefile : contenant les polygones des DCOMIRIS
-                                      (use fiona.open())
-                        - col_lambert93 : liste des noms des colonnes
-                                          (lambert93_X, lambert93_Y)
-           return : -res_dict : dictionnaire numpy au format
-                                {numero_coordonnees: DCOMIRIS}
-           dependencies :  shapely, numpy, sys, Ipython.display
-        """
 
-        Multi = MultiPolygon([shape(pol['geometry']) for pol in shapefile])
-        mat = df.ix[:, col_lambert93].as_matrix()
-        #l_iris = []
-        res_dict = {}
-        for k in range(0, len(mat)):  # parcours des coordonnées
-            for iris_poly in range(1, len(Multi)):  # parcours des polygones
-                if Point(mat[k]).within(Multi[iris_poly]):  # XY in poly ?
-                    res_dict[k] = shapefile[iris_poly]['properties']['DCOMIRIS']
-                    # Print avancement
-                    print("%s / %s" % (k, len(mat) - 1))
-                    clear_output(wait=True)
-                    sys.stdout.flush()
-                    break
-                else:
-                    res_dict[k] = np.nan
-        return res_dict
+def point_in_DCOMIRIS(df, shapefile, col_lambert93):
+    """parametres : - df : pandas DataFrame contenant les coordonnées
+                    - shapefile : contenant les polygones des DCOMIRIS
+                                  (use fiona.open())
+                    - col_lambert93 : liste des noms des colonnes
+                                      (lambert93_X, lambert93_Y)
+       return : -res_dict : dictionnaire numpy au format
+                            {numero_coordonnees: DCOMIRIS}
+       dependencies :  shapely, numpy, sys, Ipython.display
+    """
+
+    Multi = MultiPolygon([shape(pol['geometry']) for pol in shapefile])
+    mat = df.ix[:, col_lambert93].as_matrix()
+    #l_iris = []
+    res_dict = {}
+    for k in range(0, len(mat)):  # parcours des coordonnées
+        for iris_poly in range(1, len(Multi)):  # parcours des polygones
+            if Point(mat[k]).within(Multi[iris_poly]):  # XY in poly ?
+                res_dict[k] = shapefile[iris_poly]['properties']['DCOMIRIS']
+                # Print avancement
+                print("%s / %s" % (k, len(mat) - 1))
+                clear_output(wait=True)
+                sys.stdout.flush()
+                break
+            else:
+                res_dict[k] = np.nan
+    return res_dict
