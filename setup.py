@@ -25,6 +25,7 @@ setup(
                       'paramiko',
                       'scikit-learn >= 0.17',
                       'geographiclib',
-		      'shapely',	
+		      'shapely',
+		      'IPython',		
                       ]
 )
